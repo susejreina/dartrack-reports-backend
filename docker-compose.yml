@@ -1,0 +1,6 @@
+python-flask:
+  image: sicamex/flask
+  ports:
+    - "5000:3000"
+  env_file:
+    - var.env

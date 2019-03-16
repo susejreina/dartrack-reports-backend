@@ -1,0 +1,12 @@
+Click==7.0
+et-xmlfile==1.0.1
+Flask==1.0.2
+Flask-Cors==1.8.0
+itsdangerous==1.1.0
+jdcal==1.4
+Jinja2==2.10
+MarkupSafe==1.1.0
+openpyxl==2.5.12
+psycopg2==2.7.6.1
+psycopg2-binary==2.7.7
+Werkzeug==0.14.1
