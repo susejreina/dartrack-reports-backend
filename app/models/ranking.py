@@ -41,13 +41,15 @@ def build_aditional_filters(filters):
 def ranking_client(filters):
   dynamic_filters = build_aditional_filters(filters)
   cur = db.conn.cursor()
-  query_select = """SELECT clientes.id_g_suc, clientes.id_clte, clientes.negocio, clientes.poblacion,
-                            clientes.desc_canal, clientes.desc_canal_est, ordenes.rank, ordenes.htls,
-                            ordenes.htls_percentage, ordenes.total, ordenes.desc_promo, ordenes.desc_produc, ordenes.bonif, ordenes.venta_neta, ordenes.bonif_fba, ordenes.venta_final, ordenes.boxes_requested, ordenes.boxes_delivered, ordenes.ent_ped"""
+  query_select = """SELECT clientes.id_g_suc, clientes.id_clte, ordenes.rank, clientes.negocio, clientes.poblacion,
+                    clientes.canal_giro, clientes.canal_est, ordenes.htls,
+                    ordenes.htls_percentage, ordenes.total, ordenes.desc_promo, ordenes.desc_produc, 
+										ordenes.bonif, ordenes.discount_payment, ordenes.venta_neta, ordenes.bonif_fba, ordenes.venta_final, 
+										ordenes.boxes_requested, ordenes.boxes_delivered, ordenes.ent_ped"""
   from_select = """
             FROM (
-	SELECT  C.company_code as id_g_suc,C.id as id_clte, C.business_name as negocio, AD.location as poblacion, Cl.name as desc_canal,
-			CH.name as desc_canal_est
+	SELECT  C.company_code as id_g_suc,C.id as id_clte, C.business_name as negocio, AD.location as poblacion, Cl.name as canal_giro,
+			CH.name as canal_est
 	FROM clients C
 	LEFT JOIN addresses AD ON AD.id = C.address_id
 	LEFT JOIN channels CH ON C.channel_id = CH.id
@@ -70,9 +72,10 @@ LEFT JOIN
 		SUM(od.discount_promo)::DOUBLE PRECISION "desc_promo",
 		SUM(od.discount_product)::DOUBLE PRECISION "desc_produc",
 		SUM(od.discount_bonification)::DOUBLE PRECISION "bonif",
+		SUM(od.discount_payment)::DOUBLE PRECISION "discount_payment",
 		SUM(od.total)::DOUBLE PRECISION "venta_neta",
 		SUM(od.discount_fba)::DOUBLE PRECISION "bonif_fba",
-		(SUM(od.total) - SUM(od.discount_fba))::DOUBLE PRECISION "venta_final",
+		(SUM(od.total) - SUM(od.discount_fba) - SUM(od.discount_payment))::DOUBLE PRECISION "venta_final",
 		SUM(od.quantity)::INTEGER "boxes_requested",
 		SUM(od.quantity_delivered)::INTEGER "boxes_delivered",
 		CASE

@@ -20,7 +20,7 @@ def ranking_client(charset='utf-8'):
   filters = jsonResponse.get('filters', False)
   data = ranking.ranking_client(filters)
   wb, ws = utils.create_workbook("Ranking x Cliente RC-11.2")
-  ws = utils.header(ws, "RANKING x CLIENTE", 'CEDIS', 'LAGOS DE MORENO')
+  ws = utils.header(ws, "Vtas Cltes Rankin Acum Detallada Filtros", 'CEDIS', 'LAGOS DE MORENO')
   # print(jsonResponse.get('table', False))
   # table_exists = data.get('table', False)
   # headers_exists = data['table'].get('table', False)
