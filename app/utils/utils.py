@@ -74,7 +74,7 @@ def load_rows(ws, data):
     ws.append(row_list)
   return ws
 
-def paint_par(ws, cell_header, data):
+def paint_par(ws, cell_header, data, num_col):
   rowPar = NamedStyle(name="rowPar")
   rowPar.fill = PatternFill("solid", fgColor="E0ECF8")
 
@@ -83,6 +83,8 @@ def paint_par(ws, cell_header, data):
     for rowD in range(11,len(data)+11):
       if(rowD % 2 == 0):
         ws[column_letter + str(rowD)].style = rowPar
+      if(column > num_col):
+        ws[column_letter + str(rowD)].number_format = '#,#0.0'
   return ws
 
 def load_filters(ws, init_vector):

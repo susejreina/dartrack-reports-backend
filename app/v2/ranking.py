@@ -34,7 +34,7 @@ def ranking_client(charset='utf-8'):
     ws.append(list(table_header))
     # Method for load rows
     ws = utils.load_rows(ws, data)
-    ws = utils.paint_par(ws, table_header, data)
+    ws = utils.paint_par(ws, table_header, data, 7)
     # Method for rezise cells
     # This method recives workbook active instance and
     ws = utils.resize_cells(ws, 20)
