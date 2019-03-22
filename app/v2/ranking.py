@@ -44,7 +44,7 @@ def ranking_client(charset='utf-8'):
     ws = utils.load_filters(ws, 'A11')
     # Method for adds color to titles, first color si for the font
     # second color is for fill cell. Colors is in format RGB
-    ws = utils.adds_title_format(ws, table_header, "000000", "afbcd7")
+    ws = utils.adds_title_format(ws, table_header, "FFFFFF", "4F81BD")
 
     nombre_archivo ="RC-13-1-"+datetime.now().date().strftime('%Y%m%d')+".xlsx"
     wb.save(nombre_archivo)
