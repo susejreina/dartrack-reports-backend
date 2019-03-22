@@ -45,7 +45,10 @@ def ranking_client(charset='utf-8'):
     # Method for adds color to titles, first color si for the font
     # second color is for fill cell. Colors is in format RGB
     ws = utils.adds_title_format(ws, table_header, "FFFFFF", "4F81BD",row)
-
+    total_start = row + 2
+    total_end = (len(data) + total_start) -1
+    total_total = total_end + 1
+    ws.append(['Total','','','','','','','= SUM(H'+str(total_start)+':H'+str(total_end)+')','= SUM(I'+str(total_start)+':I'+str(total_end)+')','= SUM(J'+str(total_start)+':J'+str(total_end)+')','= SUM(K'+str(total_start)+':K'+str(total_end)+')','= SUM(L'+str(total_start)+':L'+str(total_end)+')','= SUM(M'+str(total_start)+':M'+str(total_end)+')','= SUM(N'+str(total_start)+':N'+str(total_end)+')','= SUM(O'+str(total_start)+':O'+str(total_end)+')','= SUM(P'+str(total_start)+':P'+str(total_end)+')','= SUM(Q'+str(total_start)+':Q'+str(total_end)+')','= SUM(R'+str(total_start)+':R'+str(total_end)+')','= SUM(S'+str(total_start)+':S'+str(total_end)+')','= ((S'+str(total_total)+'*100)/R'+str(total_total)+')/100'])
     nombre_archivo ="RC-13-1-"+datetime.now().date().strftime('%Y%m%d')+".xlsx"
     wb.save(nombre_archivo)
     return send_file('../'+nombre_archivo, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', True, nombre_archivo)
