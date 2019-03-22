@@ -20,7 +20,7 @@ def ranking_client(charset='utf-8'):
   filters = jsonResponse.get('filters', False)
   data = ranking.ranking_client(filters)
   wb, ws = utils.create_workbook("Ranking x Cliente RC-11.2")
-  ws = utils.header(ws, "Vtas Cltes Rankin Acum Detallada Filtros", 'CEDIS', 'LAGOS DE MORENO')
+  ws,row = utils.header(ws, "Vtas Cltes Rankin Acum Detallada Filtros", 'CEDIS', 'LAGOS DE MORENO',filters)
   # print(jsonResponse.get('table', False))
   # table_exists = data.get('table', False)
   # headers_exists = data['table'].get('table', False)
@@ -34,17 +34,17 @@ def ranking_client(charset='utf-8'):
     ws.append(list(table_header))
     # Method for load rows
     ws = utils.load_rows(ws, data)
-    ws = utils.paint_par(ws, table_header, data, 7)
+    ws = utils.paint_par(ws, table_header, data, 7,row)
     # Method for rezise cells
     # This method recives workbook active instance and
     ws = utils.resize_cells(ws, 20)
     # Method for load filters
     # This method recives workbook active instance and
     # init vector on init the header_table
-    ws = utils.load_filters(ws, 'A11')
+    # ws = utils.load_filters(ws, 'A11')
     # Method for adds color to titles, first color si for the font
     # second color is for fill cell. Colors is in format RGB
-    ws = utils.adds_title_format(ws, table_header, "FFFFFF", "4F81BD")
+    ws = utils.adds_title_format(ws, table_header, "FFFFFF", "4F81BD",row)
 
     nombre_archivo ="RC-13-1-"+datetime.now().date().strftime('%Y%m%d')+".xlsx"
     wb.save(nombre_archivo)

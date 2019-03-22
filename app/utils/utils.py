@@ -11,7 +11,7 @@ def create_workbook(title):
   ws.title = title
   return [wb, ws]
 
-def header(ws, enc, h1, h2):
+def header(ws, enc, h1, h2, filters):
   ws['A1'] = enc
   title = ws['A1']
   title = format_text(ws['A1'], "center", "center")
@@ -22,36 +22,63 @@ def header(ws, enc, h1, h2):
   title = ws['A3']
   title = format_text(ws['A3'], "left", "center")
 
-  ws['A4'] = 'FECHA'
-  ws['B4'] = 'Desde  Al '
-  title = ws['A4']
-  title = format_text(ws['A4'], "left", "center")
+  init_date  = filters.get('init_date', False)
+  last_date  = filters.get('last_date', False)
+  canal_est = filters.get('canal_est', False)
+  presale_route  = filters.get('presale_route', False)
+  delivery_route  = filters.get('delivery_route', False)
+  product = filters.get('product', False)
+  group_product = filters.get('group_product',False)  
+  
+  nro = 3
+  if init_date and last_date:
+    nro += 1
+    ws['A'+str(nro)] = 'FECHA'
+    ws['B'+str(nro)] = 'Desde '+init_date+' Al '+last_date
+    title = ws['A'+str(nro)]
+    title = format_text(ws['A'+str(nro)], "left", "center")
 
-  ws['A5'] = 'RUTA PREVENTA'
-  ws['B5'] = ''
-  title = ws['A5']
-  title = format_text(ws['A5'], "left", "center")
+  if presale_route:
+    if presale_route["presale_route_id"] != 0:
+      nro += 1
+      ws['A'+str(nro)] = 'RUTA PREVENTA'
+      ws['B'+str(nro)] = str(presale_route["presale_route"])
+      title = ws['A'+str(nro)]
+      title = format_text(ws['A'+str(nro)], "left", "center")
 
-  ws['A6'] = 'RUTA ENTREGA'
-  ws['B6'] = ''
-  title = ws['A6']
-  title = format_text(ws['A6'], "left", "center")
+  if delivery_route:
+    if delivery_route["delivery_route_id"] != 0:
+      nro += 1
+      ws['A'+str(nro)] = 'RUTA ENTREGA'
+      ws['B'+str(nro)] = str(delivery_route["delivery_route"])
+      title = ws['A'+str(nro)]
+      title = format_text(ws['A'+str(nro)], "left", "center")
 
-  ws['A7'] = 'PRODUCTO'
-  ws['B7'] = ''
-  title = ws['A7']
-  title = format_text(ws['A7'], "left", "center")
+  if product:
+    if product["product_id"] != 0:
+      nro += 1
+      ws['A'+str(nro)] = 'PRODUCTO'
+      ws['B'+str(nro)] = str(product["product"])
+      title = ws['A'+str(nro)]
+      title = format_text(ws['A'+str(nro)], "left", "center")
 
-  ws['A8'] = 'DESCRIPCION CANAL'
-  ws['B8'] = ''
-  title = ws['A8']
-  title = format_text(ws['A8'], "left", "center")
+  if canal_est:
+    if canal_est["canal_est_id"] != 0:
+      nro += 1
+      ws['A'+str(nro)] = 'DESCRIPCION CANAL'
+      ws['B'+str(nro)] = str(canal_est["canal_est"])
+      title = ws['A'+str(nro)]
+      title = format_text(ws['A'+str(nro)], "left", "center")
 
-  ws['A9'] = 'GRUPO'
-  ws['B9'] = ''
-  title = ws['A9']
-  title = format_text(ws['A9'], "left", "center")
-  return ws
+  if group_product:
+    if group_product["group_product_id"] != 0:
+      nro += 1
+      ws['A'+str(nro)] = 'GRUPO'
+      ws['B'+str(nro)] = str(group_product["group_product"])
+      title = ws['A'+str(nro)]
+      title = format_text(ws['A'+str(nro)], "left", "center")
+  nro += 1
+  return [ws,nro]
 
 def format_text(celda, alingH, alingV):
   title = celda
@@ -74,13 +101,13 @@ def load_rows(ws, data):
     ws.append(row_list)
   return ws
 
-def paint_par(ws, cell_header, data, num_col):
+def paint_par(ws, cell_header, data, num_col,row=11):
   rowPar = NamedStyle(name="rowPar")
   rowPar.fill = PatternFill("solid", fgColor="E0ECF8")
 
   for column in range(1,len(cell_header)+1):
     column_letter = get_column_letter(column)
-    for rowD in range(11,len(data)+11):
+    for rowD in range(row,len(data)+row):
       if(rowD % 2 == 0):
         ws[column_letter + str(rowD)].style = rowPar
       if(column > num_col):
@@ -93,13 +120,14 @@ def load_filters(ws, init_vector):
   ws.auto_filter.ref = FullRange
   return ws
 
-def adds_title_format(ws, table_header, font_color="FFFFFF", fill_color="afbcd7"):
+def adds_title_format(ws, table_header, font_color="FFFFFF", fill_color="afbcd7",rows=10):
   headOpe = NamedStyle(name="headOpe")
   headOpe.alignment = Alignment(horizontal='center')
   headOpe.fill = PatternFill("solid", fgColor=fill_color)
   headOpe.font = Font(color=font_color, size=12, bold=True)
-  ws.insert_rows(10)
-  for row in ws.iter_rows('A11:'+get_column_letter(len(table_header))+'11'):
+  ws.insert_rows(rows)
+  rows = rows + 1
+  for row in ws.iter_rows('A'+str(rows)+':'+get_column_letter(len(table_header))+str(rows)):
     for cell in row:
       cell.style = headOpe
   return ws
