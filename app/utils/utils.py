@@ -28,8 +28,8 @@ def header(ws, enc, h1, h2, filters):
   presale_route  = filters.get('presale_route', False)
   delivery_route  = filters.get('delivery_route', False)
   product = filters.get('product', False)
-  group_product = filters.get('group_product',False)  
-  
+  group_product = filters.get('group_product',False)
+
   nro = 3
   if init_date and last_date:
     nro += 1
@@ -104,6 +104,8 @@ def load_rows(ws, data):
 def paint_par(ws, cell_header, data, num_col,row=11):
   rowPar = NamedStyle(name="rowPar")
   rowPar.fill = PatternFill("solid", fgColor="E0ECF8")
+  col_money = [10,11,12,13,14,15,16,17] # columnas que indican dinero
+  col_porc = [9,20] # columnas que indican porcentaje
 
   for column in range(1,len(cell_header)+1):
     column_letter = get_column_letter(column)
@@ -111,13 +113,26 @@ def paint_par(ws, cell_header, data, num_col,row=11):
       if(rowD % 2 == 0):
         ws[column_letter + str(rowD)].style = rowPar
       if(column > num_col):
-        ws[column_letter + str(rowD)].number_format = '#,#0.0'
+        ws[column_letter + str(rowD)].number_format = '#,##0.00'
+      if(column in col_money):
+        ws[column_letter + str(rowD)].number_format = '#,##0.00 $'
+      if(column in col_porc):
+        ws[column_letter + str(rowD)].number_format = '#,##0.00 %'
   return ws
 
 def load_filters(ws, init_vector):
   FullRange = init_vector +':' + get_column_letter(ws.max_column) \
   + str(ws.max_row)
   ws.auto_filter.ref = FullRange
+  return ws
+
+def total_summary(ws, data, row):
+  total_start = row + 2
+  total_end = (len(data) + total_start) -1
+  total_total = total_end + 1
+
+  ws.append(['Total','','','','','','','= SUM(H'+str(total_start)+':H'+str(total_end)+')','= SUM(I'+str(total_start)+':I'+str(total_end)+')','= SUM(J'+str(total_start)+':J'+str(total_end)+')','= SUM(K'+str(total_start)+':K'+str(total_end)+')','= SUM(L'+str(total_start)+':L'+str(total_end)+')','= SUM(M'+str(total_start)+':M'+str(total_end)+')','= SUM(N'+str(total_start)+':N'+str(total_end)+')','= SUM(O'+str(total_start)+':O'+str(total_end)+')','= SUM(P'+str(total_start)+':P'+str(total_end)+')','= SUM(Q'+str(total_start)+':Q'+str(total_end)+')','= SUM(R'+str(total_start)+':R'+str(total_end)+')','= SUM(S'+str(total_start)+':S'+str(total_end)+')','= ((S'+str(total_total)+'*100)/R'+str(total_total)+')'])
+
   return ws
 
 def adds_title_format(ws, table_header, font_color="FFFFFF", fill_color="afbcd7",rows=10):
