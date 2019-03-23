@@ -131,7 +131,20 @@ def total_summary(ws, data, row):
   total_end = (len(data) + total_start) -1
   total_total = total_end + 1
 
-  ws.append(['Total','','','','','','','= SUM(H'+str(total_start)+':H'+str(total_end)+')','= SUM(I'+str(total_start)+':I'+str(total_end)+')','= SUM(J'+str(total_start)+':J'+str(total_end)+')','= SUM(K'+str(total_start)+':K'+str(total_end)+')','= SUM(L'+str(total_start)+':L'+str(total_end)+')','= SUM(M'+str(total_start)+':M'+str(total_end)+')','= SUM(N'+str(total_start)+':N'+str(total_end)+')','= SUM(O'+str(total_start)+':O'+str(total_end)+')','= SUM(P'+str(total_start)+':P'+str(total_end)+')','= SUM(Q'+str(total_start)+':Q'+str(total_end)+')','= SUM(R'+str(total_start)+':R'+str(total_end)+')','= SUM(S'+str(total_start)+':S'+str(total_end)+')','= ((S'+str(total_total)+'*100)/R'+str(total_total)+')'])
+  ws.append(['Total','','','','','','','= SUM(H'+str(total_start)+':H'+str(total_end)+')','= SUM(I'+str(total_start)+':I'+str(total_end)+')','= SUM(J'+str(total_start)+':J'+str(total_end)+')','= SUM(K'+str(total_start)+':K'+str(total_end)+')','= SUM(L'+str(total_start)+':L'+str(total_end)+')','= SUM(M'+str(total_start)+':M'+str(total_end)+')','= SUM(N'+str(total_start)+':N'+str(total_end)+')','= SUM(O'+str(total_start)+':O'+str(total_end)+')','= SUM(P'+str(total_start)+':P'+str(total_end)+')','= SUM(Q'+str(total_start)+':Q'+str(total_end)+')','= SUM(R'+str(total_start)+':R'+str(total_end)+')','= SUM(S'+str(total_start)+':S'+str(total_end)+')','= ((S'+str(total_total)+')/R'+str(total_total)+')'])
+  ws['H'+str(total_total)].number_format = '#,##0.00'
+  ws['I'+str(total_total)].number_format = '#,##0.00 %'
+  ws['J'+str(total_total)].number_format = '#,##0.00 $'
+  ws['K'+str(total_total)].number_format = '#,##0.00 $'
+  ws['L'+str(total_total)].number_format = '#,##0.00 $'
+  ws['M'+str(total_total)].number_format = '#,##0.00 $'
+  ws['N'+str(total_total)].number_format = '#,##0.00 $'
+  ws['O'+str(total_total)].number_format = '#,##0.00 $'
+  ws['P'+str(total_total)].number_format = '#,##0.00 $'
+  ws['Q'+str(total_total)].number_format = '#,##0.00 $'
+  ws['R'+str(total_total)].number_format = '#,##0.00'
+  ws['S'+str(total_total)].number_format = '#,##0.00'
+  ws['T'+str(total_total)].number_format = '#,##0.00 %'
 
   return ws
 

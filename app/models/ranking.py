@@ -45,7 +45,7 @@ def build_aditional_filters(filters):
 		if group_product["group_product_id"] != 0:
 			filters = filters + """
 				AND p.product_group_id ="""+str(group_product["group_product_id"])+"""
-			"""			
+			"""
 	if (init_date and last_date):
 		date_start = utils.format_date(init_date, '01:00')
 		date_end = utils.format_date(last_date, '23:59')
@@ -59,10 +59,10 @@ def ranking_client(filters):
 	client_filters = build_clients_filters(filters)
 	cur = db.conn.cursor()
 	query_select = """SELECT clientes.id_g_suc, clientes.id_clte, ordenes.rank, clientes.negocio, clientes.poblacion,
-										clientes.canal_giro, clientes.canal_est, ordenes.htls,
-										ordenes.htls_percentage, ordenes.total, ordenes.desc_promo, ordenes.desc_produc, 
-										ordenes.bonif, ordenes.discount_payment, ordenes.venta_neta, ordenes.bonif_fba, ordenes.venta_final, 
-										ordenes.boxes_requested, ordenes.boxes_delivered, ordenes.ent_ped"""
+						clientes.canal_giro, clientes.canal_est, ordenes.htls,
+						ordenes.htls_percentage, ordenes.total, ordenes.desc_promo, ordenes.desc_produc,
+						ordenes.bonif, ordenes.discount_payment, ordenes.venta_neta, ordenes.bonif_fba, ordenes.venta_final,
+						ordenes.boxes_requested, ordenes.boxes_delivered, ordenes.ent_ped"""
 	from_select = """
 						FROM (
 	SELECT  C.company_code as id_g_suc,C.id as id_clte, C.business_name as negocio, AD.location as poblacion, Cl.name as canal_giro,
@@ -77,7 +77,7 @@ LEFT JOIN
 (
 	SELECT	o.client_id as client, rank() over (order by SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION DESC) as rank,
 			SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION "htls",
-		(SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION * 100 /
+		(SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION /
 		(SELECT	SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION
 		 FROM orders o
 		 LEFT JOIN order_details od ON o.id = od.order_id
@@ -96,7 +96,7 @@ LEFT JOIN
 		SUM(od.quantity_delivered)::INTEGER "boxes_delivered",
 		CASE
 			WHEN SUM(od.quantity_delivered)::INTEGER != 0
-			THEN ((SUM(od.quantity_delivered)*100)/SUM(od.quantity))
+			THEN ((SUM(od.quantity_delivered) ::DOUBLE PRECISION)/SUM(od.quantity ::DOUBLE PRECISION))
 			ELSE 0
 		END as "ent_ped"
 		FROM orders o
