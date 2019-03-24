@@ -41,7 +41,7 @@ def detail_client_sell(charset='utf-8'):
     ws = utils.load_filters(ws, 'A1')
     # Method for adds color to titles, first color si for the font
     # second color is for fill cell. Colors is in format RGB
-    ws = utils.adds_title_format(ws, table_header, "000000", "afbcd7")
+    ws = utils.adds_title_format(ws, len(table_header), "000000", "afbcd7")
 
     nombre_archivo ="RC-13-1-"+datetime.now().date().strftime('%Y%m%d')+".xlsx"
     wb.save(nombre_archivo)

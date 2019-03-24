@@ -58,11 +58,22 @@ def ranking_client(filters):
 	dynamic_filters = build_aditional_filters(filters)
 	client_filters = build_clients_filters(filters)
 	cur = db.conn.cursor()
-	query_select = """SELECT clientes.id_g_suc, clientes.id_clte, ordenes.rank, clientes.negocio, clientes.poblacion,
-						clientes.canal_giro, clientes.canal_est, ordenes.htls,
-						ordenes.htls_percentage, ordenes.total, ordenes.desc_promo, ordenes.desc_produc,
-						ordenes.bonif, ordenes.discount_payment, ordenes.venta_neta, ordenes.bonif_fba, ordenes.venta_final,
-						ordenes.boxes_requested, ordenes.boxes_delivered, ordenes.ent_ped"""
+	query_select = """SELECT clientes.id_g_suc, clientes.id_clte, 
+								CASE WHEN ordenes.rank IS NULL THEN 0 ELSE ordenes.rank END, 
+								clientes.negocio, clientes.poblacion, clientes.canal_giro, clientes.canal_est, 
+								CASE WHEN ordenes.htls IS NULL THEN 0 ELSE ordenes.htls END,
+								CASE WHEN ordenes.htls_percentage IS NULL THEN 0 ELSE ordenes.htls_percentage END,
+								CASE WHEN ordenes.total IS NULL THEN 0 ELSE ordenes.total END,
+								CASE WHEN ordenes.desc_promo IS NULL THEN 0 ELSE ordenes.desc_promo END,
+								CASE WHEN ordenes.desc_produc IS NULL THEN 0 ELSE ordenes.desc_produc END,
+								CASE WHEN ordenes.bonif IS NULL THEN 0 ELSE ordenes.bonif END,
+								CASE WHEN ordenes.discount_payment IS NULL THEN 0 ELSE ordenes.discount_payment END,
+								CASE WHEN ordenes.venta_neta IS NULL THEN 0 ELSE ordenes.venta_neta END,
+								CASE WHEN ordenes.bonif_fba IS NULL THEN 0 ELSE ordenes.bonif_fba END,
+								CASE WHEN ordenes.venta_final IS NULL THEN 0 ELSE ordenes.venta_final END,
+								CASE WHEN ordenes.boxes_requested IS NULL THEN 0 ELSE ordenes.boxes_requested END,
+								CASE WHEN ordenes.boxes_delivered IS NULL THEN 0 ELSE ordenes.boxes_delivered END,
+								CASE WHEN ordenes.ent_ped IS NULL THEN 0 ELSE ordenes.ent_ped END"""
 	from_select = """
 						FROM (
 	SELECT  C.company_code as id_g_suc,C.id as id_clte, C.business_name as negocio, AD.location as poblacion, Cl.name as canal_giro,

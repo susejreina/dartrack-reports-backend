@@ -101,15 +101,13 @@ def load_rows(ws, data):
     ws.append(row_list)
   return ws
 
-def paint_par(ws, cell_header, data, num_col,row=11):
+def paint_par(ws, cell_header, data, num_col,row=11, col_money=[],col_porc=[]):
   rowPar = NamedStyle(name="rowPar")
   rowPar.fill = PatternFill("solid", fgColor="E0ECF8")
-  col_money = [10,11,12,13,14,15,16,17] # columnas que indican dinero
-  col_porc = [9,20] # columnas que indican porcentaje
 
   for column in range(1,len(cell_header)+1):
     column_letter = get_column_letter(column)
-    for rowD in range(row,len(data)+row):
+    for rowD in range(row,len(data)+row+1):
       if(rowD % 2 == 0):
         ws[column_letter + str(rowD)].style = rowPar
       if(column > num_col):
@@ -126,36 +124,35 @@ def load_filters(ws, init_vector):
   ws.auto_filter.ref = FullRange
   return ws
 
-def total_summary(ws, data, row):
-  total_start = row + 2
-  total_end = (len(data) + total_start) -1
-  total_total = total_end + 1
+def total_summary(ws, listTotal, numberRow, lonTableHeader, font_color="FFFFFF", fill_color="afbcd7",formatPercent=[],formatMoney=[],formatNumber=[]):
+  
+  ws.append(listTotal)
+  
+  totalOpe = NamedStyle(name="totalOpe")
+  totalOpe.alignment = Alignment(horizontal='center')
+  totalOpe.fill = PatternFill("solid", fgColor=fill_color)
+  totalOpe.font = Font(color=font_color, size=12, bold=True)
+  for row in ws.iter_rows('A'+str(numberRow)+':'+get_column_letter(lonTableHeader)+str(numberRow)):
+    for cell in row:
+      cell.style = totalOpe
 
-  ws.append(['Total','','','','','','','= SUM(H'+str(total_start)+':H'+str(total_end)+')','= SUM(I'+str(total_start)+':I'+str(total_end)+')','= SUM(J'+str(total_start)+':J'+str(total_end)+')','= SUM(K'+str(total_start)+':K'+str(total_end)+')','= SUM(L'+str(total_start)+':L'+str(total_end)+')','= SUM(M'+str(total_start)+':M'+str(total_end)+')','= SUM(N'+str(total_start)+':N'+str(total_end)+')','= SUM(O'+str(total_start)+':O'+str(total_end)+')','= SUM(P'+str(total_start)+':P'+str(total_end)+')','= SUM(Q'+str(total_start)+':Q'+str(total_end)+')','= SUM(R'+str(total_start)+':R'+str(total_end)+')','= SUM(S'+str(total_start)+':S'+str(total_end)+')','= ((S'+str(total_total)+')/R'+str(total_total)+')'])
-  ws['H'+str(total_total)].number_format = '#,##0.00'
-  ws['I'+str(total_total)].number_format = '#,##0.00 %'
-  ws['J'+str(total_total)].number_format = '#,##0.00 $'
-  ws['K'+str(total_total)].number_format = '#,##0.00 $'
-  ws['L'+str(total_total)].number_format = '#,##0.00 $'
-  ws['M'+str(total_total)].number_format = '#,##0.00 $'
-  ws['N'+str(total_total)].number_format = '#,##0.00 $'
-  ws['O'+str(total_total)].number_format = '#,##0.00 $'
-  ws['P'+str(total_total)].number_format = '#,##0.00 $'
-  ws['Q'+str(total_total)].number_format = '#,##0.00 $'
-  ws['R'+str(total_total)].number_format = '#,##0.00'
-  ws['S'+str(total_total)].number_format = '#,##0.00'
-  ws['T'+str(total_total)].number_format = '#,##0.00 %'
+  for col_letter in formatPercent:
+    ws[col_letter+str(numberRow)].number_format = '#,##0.00 %'
+  for col_letter in formatMoney:
+    ws[col_letter+str(numberRow)].number_format = '#,##0.00 $'
+  for col_letter in formatNumber:
+    ws[col_letter+str(numberRow)].number_format = '#,##0.00'
 
   return ws
 
-def adds_title_format(ws, table_header, font_color="FFFFFF", fill_color="afbcd7",rows=10):
+def adds_title_format(ws, lonTableHeader, font_color="FFFFFF", fill_color="afbcd7",rows=10):
   headOpe = NamedStyle(name="headOpe")
   headOpe.alignment = Alignment(horizontal='center')
   headOpe.fill = PatternFill("solid", fgColor=fill_color)
   headOpe.font = Font(color=font_color, size=12, bold=True)
   ws.insert_rows(rows)
   rows = rows + 1
-  for row in ws.iter_rows('A'+str(rows)+':'+get_column_letter(len(table_header))+str(rows)):
+  for row in ws.iter_rows('A'+str(rows)+':'+get_column_letter(lonTableHeader)+str(rows)):
     for cell in row:
       cell.style = headOpe
   return ws
