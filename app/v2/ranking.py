@@ -58,7 +58,7 @@ def ranking_client(charset='utf-8'):
     formatNumber = ['H','R','S']
     ws = utils.total_summary(ws, listTotal, total_total, len(table_header), "FFFFFF", "4F81BD", formatPercent,formatMoney,formatNumber)
 
-    nombre_archivo =datetime.now().date().strftime('%Y%m%d')+"Vtas Cltes Rankin Acum Detallada Filtros.xlsx"
+    nombre_archivo = "16"+datetime.now().date().strftime('%Y%m%d')+"Vtas Cltes Rankin Acum Detallada Filtros.xlsx"
     wb.save(nombre_archivo)
     return send_file('../'+nombre_archivo, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', True, nombre_archivo)
   else:
