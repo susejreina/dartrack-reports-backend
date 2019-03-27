@@ -18,7 +18,7 @@ from app.utils import utils
 def ranking_client_week(charset='utf-8'):
   jsonResponse = json.loads(request.data)
   filters = jsonResponse.get('filters', False)
-  data = model_client_ranking_week.ranking_week(filters)
+  data,week_start,week_end = model_client_ranking_week.ranking_week(filters)
   wb, ws = utils.create_workbook("Vtas Cltes Rankin x Semana")
   ws,row = utils.header(ws, "Vtas Cltes rankin x Semana Detallada Filtros", 'CEDIS', 'LAGOS DE MORENO',filters)
   # print(jsonResponse.get('table', False))
@@ -28,8 +28,8 @@ def ranking_client_week(charset='utf-8'):
   table_header = jsonResponse['table']['headers']
   start = len(table_header) - 13
   sub_header = table_header[start:]
-  table_header = table_header + sub_header
-  print(sub_header)
+  for week in range(week_start,week_end):
+    table_header = table_header + sub_header
   # else:
   #   response = { 'response': 'El header de la tabla es requerido'}
   #   return jsonify(response)

@@ -25,7 +25,7 @@ def build_clients_filters(filters):
 
 def build_ranking_filters(filters):
 	init_date  = filters.get('init_date', False)
-	last_date  = filters.get('last_date', False)	
+	last_date  = filters.get('last_date', False)
 	presale_route  = filters.get('presale_route', False)
 	delivery_route  = filters.get('delivery_route', False)
 	product = filters.get('product', False)
@@ -94,7 +94,11 @@ def build_orders_filters(filters,week):
 	return filters
 
 def ranking_week(filters):
-	
+	init_date  = filters.get('init_date', False)
+	last_date  = filters.get('last_date', False)
+
+	week_start = datetime.strptime(init_date,'%d/%m/%Y').isocalendar()[1]
+	week_end = int(datetime.strptime(last_date,'%d/%m/%Y').isocalendar()[1]) + 1
 
 	client_filters = build_clients_filters(filters)
 	ranking_filters = build_ranking_filters(filters)
@@ -105,7 +109,7 @@ def ranking_week(filters):
 								clientes.negocio, clientes.poblacion, clientes.canal_giro, clientes.canal_est, """
 	
 	query_weeks = ""
-	for week in range(1,3):
+	for week in range(week_start,week_end):
 		query_weeks += """
 		CASE WHEN ordenes_"""+str(week)+""".htls IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".htls END,
 		CASE WHEN ordenes_"""+str(week)+""".htls_percentage IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".htls_percentage END,
@@ -120,6 +124,21 @@ def ranking_week(filters):
 		CASE WHEN ordenes_"""+str(week)+""".boxes_requested IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".boxes_requested END,
 		CASE WHEN ordenes_"""+str(week)+""".boxes_delivered IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".boxes_delivered END,
 		CASE WHEN ordenes_"""+str(week)+""".ent_ped IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".ent_ped END,"""
+
+	query_weeks += """
+		CASE WHEN ordenes.htls IS NULL THEN 0 ELSE ordenes.htls END,
+		CASE WHEN ordenes.htls_percentage IS NULL THEN 0 ELSE ordenes.htls_percentage END,
+		CASE WHEN ordenes.total IS NULL THEN 0 ELSE ordenes.total END,
+		CASE WHEN ordenes.desc_promo IS NULL THEN 0 ELSE ordenes.desc_promo END,
+		CASE WHEN ordenes.desc_produc IS NULL THEN 0 ELSE ordenes.desc_produc END,
+		CASE WHEN ordenes.bonif IS NULL THEN 0 ELSE ordenes.bonif END,
+		CASE WHEN ordenes.discount_payment IS NULL THEN 0 ELSE ordenes.discount_payment END,
+		CASE WHEN ordenes.venta_neta IS NULL THEN 0 ELSE ordenes.venta_neta END,
+		CASE WHEN ordenes.bonif_fba IS NULL THEN 0 ELSE ordenes.bonif_fba END,
+		CASE WHEN ordenes.venta_final IS NULL THEN 0 ELSE ordenes.venta_final END,
+		CASE WHEN ordenes.boxes_requested IS NULL THEN 0 ELSE ordenes.boxes_requested END,
+		CASE WHEN ordenes.boxes_delivered IS NULL THEN 0 ELSE ordenes.boxes_delivered END,
+		CASE WHEN ordenes.ent_ped IS NULL THEN 0 ELSE ordenes.ent_ped END"""
 
 	from_select = """
 						FROM (
@@ -144,7 +163,7 @@ LEFT JOIN
 	ON clientes.id_clte = ranking_ordenes.client"""
 	
 	joins_week = ""
-	for week in range(1,3):
+	for week in range(week_start,week_end):
 		dynamic_filters = build_orders_filters(filters,week)
 		joins_week += """ LEFT JOIN 
 			(
@@ -181,10 +200,44 @@ LEFT JOIN
 			) as ordenes_"""+str(week)+"""
 			ON clientes.id_clte = ordenes_"""+str(week)+""".client
 		"""
+	total_orders = """ LEFT JOIN 
+			(
+			SELECT	o.client_id as client, SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION "htls", 
+			(SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION * 100 /
+			(SELECT	SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION
+			FROM orders o
+			LEFT JOIN order_details  od ON o.id = od.order_id
+			LEFT JOIN products  p ON p.id = od.product_id
+			WHERE od.is_devolution = false AND o.active = true """+ranking_filters+"""
+			)) as htls_percentage,
+			(SUM(od.total) + SUM(od.discount_promo) + SUM(od.discount_bonification))::DOUBLE PRECISION "total", 
+			SUM(od.discount_promo)::DOUBLE PRECISION "desc_promo",
+			SUM(od.discount_product)::DOUBLE PRECISION "desc_produc",
+			SUM(od.discount_bonification)::DOUBLE PRECISION "bonif",
+			SUM(od.discount_payment)::DOUBLE PRECISION "discount_payment",
+			(SUM(od.total))::DOUBLE PRECISION "venta_neta", 
+			SUM(od.discount_fba)::DOUBLE PRECISION "bonif_fba",
+			(SUM(od.total) - SUM(od.discount_fba))::DOUBLE PRECISION "venta_final", 
+			SUM(od.quantity)::INTEGER "boxes_requested", 
+			SUM(od.quantity_delivered)::INTEGER "boxes_delivered",
+			CASE 
+				WHEN SUM(od.quantity_delivered)::INTEGER != 0 
+					THEN ((SUM(od.quantity_delivered)*100)/SUM(od.quantity))
+					ELSE 0
+			END
+			as "ent_ped"
+			FROM orders o
+			LEFT JOIN order_details  od ON o.id = od.order_id
+			LEFT JOIN products  p ON p.id = od.product_id
+			WHERE od.is_devolution = false AND o.active = true  """+ranking_filters+"""
+			GROUP BY O.client_id
+			ORDER BY O.client_id
+			) as ordenes
+			ON clientes.id_clte = ordenes.client
+		"""
 
-	others_commands = """
-						ORDER BY clientes.id_clte;"""
-	query = query_select+query_weeks[:-1]+from_select+joins_week+others_commands
+	others_commands = """ ORDER BY clientes.id_clte;"""
+	query = query_select+query_weeks+from_select+joins_week+total_orders+others_commands
 	cur.execute(query)
 	data = cur.fetchall()
-	return data
+	return [data,week_start,week_end]
