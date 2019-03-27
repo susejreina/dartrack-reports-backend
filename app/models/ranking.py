@@ -7,13 +7,19 @@ from datetime import datetime
 from app.utils import utils
 
 def build_clients_filters(filters):
+	canal_giro = filters.get('canal_giro', False)
 	canal_est = filters.get('canal_est', False)
 	filters = ""
 
+	if (canal_giro):
+		if canal_giro["canal_giro_id"] != 0:
+			filters = filters + """
+				WHERE Cl.id ="""+str(canal_giro["canal_giro_id"])+"""
+			"""
 	if (canal_est):
 		if canal_est["canal_est_id"] != 0:
 			filters = filters + """
-				WHERE Cl.id ="""+str(canal_est["canal_est_id"])+"""
+				WHERE C.channel_id ="""+str(canal_est["canal_est_id"])+"""
 			"""
 	return filters
 
