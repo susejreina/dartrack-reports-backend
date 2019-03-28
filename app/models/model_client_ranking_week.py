@@ -168,10 +168,10 @@ LEFT JOIN
 		joins_week += """ LEFT JOIN 
 			(
 			SELECT	o.client_id as client, SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION "htls", 
-			(SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION * 100 /
+			(SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION /
 			(SELECT	SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION
 			FROM orders o
-			LEFT JOIN order_details  od ON o.id = od.order_id
+			LEFT JOIN order_details od ON o.id = od.order_id
 			LEFT JOIN products  p ON p.id = od.product_id
 			WHERE od.is_devolution = false AND o.active = true """+dynamic_filters+"""
 			)) as htls_percentage,
@@ -182,15 +182,14 @@ LEFT JOIN
 			SUM(od.discount_payment)::DOUBLE PRECISION "discount_payment",
 			(SUM(od.total))::DOUBLE PRECISION "venta_neta", 
 			SUM(od.discount_fba)::DOUBLE PRECISION "bonif_fba",
-			(SUM(od.total) - SUM(od.discount_fba))::DOUBLE PRECISION "venta_final", 
+			(SUM(od.total) - SUM(od.discount_fba) - SUM(od.discount_payment))::DOUBLE PRECISION "venta_final",
 			SUM(od.quantity)::INTEGER "boxes_requested", 
 			SUM(od.quantity_delivered)::INTEGER "boxes_delivered",
-			CASE 
-				WHEN SUM(od.quantity_delivered)::INTEGER != 0 
-					THEN ((SUM(od.quantity_delivered)*100)/SUM(od.quantity))
-					ELSE 0
-			END
-			as "ent_ped"
+			CASE
+				WHEN SUM(od.quantity_delivered)::INTEGER != 0
+				THEN ((SUM(od.quantity_delivered) ::DOUBLE PRECISION)/SUM(od.quantity ::DOUBLE PRECISION))
+				ELSE 0
+			END as "ent_ped"
 			FROM orders o
 			LEFT JOIN order_details  od ON o.id = od.order_id
 			LEFT JOIN products  p ON p.id = od.product_id
@@ -203,10 +202,10 @@ LEFT JOIN
 	total_orders = """ LEFT JOIN 
 			(
 			SELECT	o.client_id as client, SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION "htls", 
-			(SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION * 100 /
+			(SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION /
 			(SELECT	SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION
 			FROM orders o
-			LEFT JOIN order_details  od ON o.id = od.order_id
+			LEFT JOIN order_details od ON o.id = od.order_id
 			LEFT JOIN products  p ON p.id = od.product_id
 			WHERE od.is_devolution = false AND o.active = true """+ranking_filters+"""
 			)) as htls_percentage,
@@ -217,15 +216,14 @@ LEFT JOIN
 			SUM(od.discount_payment)::DOUBLE PRECISION "discount_payment",
 			(SUM(od.total))::DOUBLE PRECISION "venta_neta", 
 			SUM(od.discount_fba)::DOUBLE PRECISION "bonif_fba",
-			(SUM(od.total) - SUM(od.discount_fba))::DOUBLE PRECISION "venta_final", 
+			(SUM(od.total) - SUM(od.discount_fba) - SUM(od.discount_payment))::DOUBLE PRECISION "venta_final", 
 			SUM(od.quantity)::INTEGER "boxes_requested", 
 			SUM(od.quantity_delivered)::INTEGER "boxes_delivered",
-			CASE 
-				WHEN SUM(od.quantity_delivered)::INTEGER != 0 
-					THEN ((SUM(od.quantity_delivered)*100)/SUM(od.quantity))
-					ELSE 0
-			END
-			as "ent_ped"
+			CASE
+				WHEN SUM(od.quantity_delivered)::INTEGER != 0
+				THEN ((SUM(od.quantity_delivered) ::DOUBLE PRECISION)/SUM(od.quantity ::DOUBLE PRECISION))
+				ELSE 0
+			END as "ent_ped"
 			FROM orders o
 			LEFT JOIN order_details  od ON o.id = od.order_id
 			LEFT JOIN products  p ON p.id = od.product_id

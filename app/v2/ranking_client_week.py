@@ -46,9 +46,27 @@ def ranking_client_week(charset='utf-8'):
     ws = utils.load_rows(ws, data)
     ws = utils.freeze_row(ws,'H',row)
 
-    col_money = [10,11,12,13,14,15,16,17] # columnas que indican dinero
-    col_porc = [9,20] # columnas que indican porcentaje
-    ws = utils.paint_par(ws, table_header, data, 7,row, col_money, col_porc)
+    col_porc=[]
+    col_money=[]
+    col_nro_int = []
+    col_nro_dec = []
+    col_nro = 7
+    for week in range(week_start,week_end+1):
+      col_nro += 1
+      col_nro_dec.append(col_nro)
+      col_nro += 1
+      col_porc.append(col_nro)
+      for t in range(8):
+        col_nro += 1
+        col_money.append(col_nro)
+      col_nro += 1
+      col_nro_int.append(col_nro)
+      col_nro += 1
+      col_nro_int.append(col_nro)
+      col_nro += 1
+      col_porc.append(col_nro)
+    
+    ws = utils.paint_par(ws, table_header, data, 7,row, col_money, col_porc,col_nro_dec,col_nro_int)
     # Method for rezise cells
     # This method recives workbook active instance and
     ws = utils.resize_cells(ws, 20)
@@ -63,11 +81,49 @@ def ranking_client_week(charset='utf-8'):
     total_start = row + 2
     total_end = (len(data) + total_start) -1
     total_total = total_end + 1
-    listTotal = ['Total','','','','','','','= SUM(H'+str(total_start)+':H'+str(total_end)+')','= SUM(I'+str(total_start)+':I'+str(total_end)+')','= SUM(J'+str(total_start)+':J'+str(total_end)+')','= SUM(K'+str(total_start)+':K'+str(total_end)+')','= SUM(L'+str(total_start)+':L'+str(total_end)+')','= SUM(M'+str(total_start)+':M'+str(total_end)+')','= SUM(N'+str(total_start)+':N'+str(total_end)+')','= SUM(O'+str(total_start)+':O'+str(total_end)+')','= SUM(P'+str(total_start)+':P'+str(total_end)+')','= SUM(Q'+str(total_start)+':Q'+str(total_end)+')','= SUM(R'+str(total_start)+':R'+str(total_end)+')','= SUM(S'+str(total_start)+':S'+str(total_end)+')','= ((S'+str(total_total)+')/R'+str(total_total)+')']
-    formatPercent = ['I','T']
-    formatMoney = ['J','K','L','M','N','O','P','Q']
-    formatNumber = ['H','R','S']
-    ws = utils.total_summary(ws, listTotal, total_total, len(table_header), "FFFFFF", "4F81BD", formatPercent,formatMoney,formatNumber)
+
+    ini_cant=7
+    listTotal = ['Total','','','','','','']
+    formatPercent = []
+    formatMoney = []
+    formatNumberInteger = []
+    formatNumberDecimal = []
+    
+    for week in range(week_start,week_end+1):
+      ini_cant += 1
+      letter_col = get_column_letter(ini_cant)
+      listTotal.append('= SUM('+letter_col+str(total_start)+':'+letter_col+str(total_end)+')')
+      formatNumberDecimal.append(letter_col)
+
+      ini_cant += 1
+      letter_col = get_column_letter(ini_cant)
+      listTotal.append('= SUM('+letter_col+str(total_start)+':'+letter_col+str(total_end)+')')
+      formatPercent.append(letter_col)
+
+      for t in range(8):
+        ini_cant += 1
+        letter_col = get_column_letter(ini_cant)
+        listTotal.append('= SUM('+letter_col+str(total_start)+':'+letter_col+str(total_end)+')')
+        formatMoney.append(letter_col)
+
+      ini_cant += 1
+      letter_col = get_column_letter(ini_cant)
+      listTotal.append('= SUM('+letter_col+str(total_start)+':'+letter_col+str(total_end)+')')
+      formatNumberInteger.append(letter_col)
+      letter_r = letter_col
+
+      ini_cant += 1
+      letter_col = get_column_letter(ini_cant)
+      listTotal.append('= SUM('+letter_col+str(total_start)+':'+letter_col+str(total_end)+')')
+      formatNumberInteger.append(letter_col)
+      letter_s = letter_col
+
+      ini_cant += 1
+      letter_col = get_column_letter(ini_cant)
+      listTotal.append('= (('+letter_s+str(total_total)+')/'+letter_r+str(total_total)+')')
+      formatPercent.append(letter_col)
+    
+    ws = utils.total_summary(ws, listTotal, total_total, len(table_header), "FFFFFF", "4F81BD", formatPercent,formatMoney,formatNumberInteger,formatNumberDecimal)
 
     nombre_archivo = datetime.now().date().strftime('%Y %m %d')+" 18Vtas Cltes rankin x Semana Detallada Filtros.xlsx"
     wb.save(nombre_archivo)

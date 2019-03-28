@@ -141,7 +141,7 @@ def freeze_row(ws,num_col,num_fil):
 
   return ws
 
-def paint_par(ws, cell_header, data, num_col,row=11, col_money=[],col_porc=[]):
+def paint_par(ws, cell_header, data, num_col,row=11, col_money=[],col_porc=[],col_nro_dec=[],col_nro_int=[]):
   rowPar = NamedStyle(name="rowPar")
   rowPar.fill = PatternFill("solid", fgColor="E0ECF8")
 
@@ -151,6 +151,10 @@ def paint_par(ws, cell_header, data, num_col,row=11, col_money=[],col_porc=[]):
       if(rowD % 2 == 0):
         ws[column_letter + str(rowD)].style = rowPar
       if(column > num_col):
+        ws[column_letter + str(rowD)].number_format = '#,##0.00'
+      if(column in col_nro_int):
+        ws[column_letter + str(rowD)].number_format = '#0'
+      if(column in col_nro_dec):
         ws[column_letter + str(rowD)].number_format = '#,##0.00'
       if(column in col_money):
         ws[column_letter + str(rowD)].number_format = '#,##0.00 $'
@@ -164,7 +168,7 @@ def load_filters(ws, init_vector):
   ws.auto_filter.ref = FullRange
   return ws
 
-def total_summary(ws, listTotal, numberRow, lonTableHeader, font_color="FFFFFF", fill_color="afbcd7",formatPercent=[],formatMoney=[],formatNumber=[]):
+def total_summary(ws, listTotal, numberRow, lonTableHeader, font_color="FFFFFF", fill_color="afbcd7",formatPercent=[],formatMoney=[],formatNumberInteger=[],formatNumberDecimal=[]):
 
   ws.append(listTotal)
 
@@ -180,8 +184,10 @@ def total_summary(ws, listTotal, numberRow, lonTableHeader, font_color="FFFFFF",
     ws[col_letter+str(numberRow)].number_format = '#,##0.00 %'
   for col_letter in formatMoney:
     ws[col_letter+str(numberRow)].number_format = '#,##0.00 $'
-  for col_letter in formatNumber:
+  for col_letter in formatNumberDecimal:
     ws[col_letter+str(numberRow)].number_format = '#,##0.00'
+  for col_letter in formatNumberInteger:
+    ws[col_letter+str(numberRow)].number_format = '#0'    
 
   return ws
 
