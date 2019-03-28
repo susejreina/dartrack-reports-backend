@@ -3,7 +3,7 @@
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import colors, Border, Color, Side, PatternFill, Font, GradientFill, Alignment, NamedStyle
-from datetime import datetime
+from datetime import datetime, time, date
 
 def create_workbook(title):
   wb = Workbook()
@@ -95,27 +95,28 @@ def resize_cells(ws, size):
     ws.column_dimensions[col].width = value
   return ws
 
-def week_header(ws, cant, row, init_date, last_date, table_header):
+def week_header(ws, cant, row, init_date, last_date):
 
   fil = row - 1
   ini_cant = cant + 1
   new_cant = cant + 13
 
-  cant = len(table_header) - cant
-  divi = cant / 13
+  fec = datetime.strptime(init_date,'%d/%m/%Y')
+  d = fec.date()
+  wk1 = d.isocalendar()[1]
 
-  '''date_object1 = datetime.strptime(init_date, '%dd/%mm/%Y')
-  date_object2 = datetime.strptime(last_date, '%dd/%mm/%Y')
-
-  diferencia = date_object2 - date_object1
-  print(diferencia)'''
+  fec1 = datetime.strptime(last_date,'%d/%m/%Y')
+  d1 = fec1.date()
+  wk2 = d1.isocalendar()[1]
+  # dt = datetime.date(init_date)
+  # wk = dt.isocalendar()[1]
 
   roweek = NamedStyle(name="roweek")
   roweek.font = Font(color='FFFFFF', size=12, bold=True)
   roweek.fill = PatternFill("solid", fgColor="4F81BD")
   roweek.alignment = Alignment(horizontal='center')
 
-  for i in range(1,divi+1):
+  for i in range(wk1,wk2+1):
     if i > 1:
       ini_cant += 13
       new_cant += 13
@@ -125,7 +126,7 @@ def week_header(ws, cant, row, init_date, last_date, table_header):
 
     ws.merge_cells(col_ini + str(fil) + ':' + col_fin + str(fil))
 
-    ws[col_ini + str(fil)] = 'SEMANA'
+    ws[col_ini + str(fil)] = 'SEMANA ' + str(i)
     title = ws[col_ini + str(fil)]
     ws[col_ini + str(fil)].style = roweek
     # title = format_text(ws[col_ini + str(fil)], "center", "center")

@@ -21,6 +21,7 @@ def ranking_client_week(charset='utf-8'):
   data = model_client_ranking_week.ranking_week(filters)
   wb, ws = utils.create_workbook("Vtas Cltes Rankin x Semana")
   ws,row = utils.header(ws, "Vtas Cltes rankin x Semana Detallada Filtros", 'CEDIS', 'LAGOS DE MORENO',filters)
+
   # print(jsonResponse.get('table', False))
   # table_exists = data.get('table', False)
   # headers_exists = data['table'].get('table', False)
@@ -31,7 +32,7 @@ def ranking_client_week(charset='utf-8'):
   sub_header = table_header[start:]
   table_header = table_header + sub_header
 
-  ws = utils.week_header(ws, start, row, jsonResponse['filters']['init_date'], jsonResponse['filters']['last_date'], table_header)
+  ws = utils.week_header(ws, start, row, jsonResponse['filters']['init_date'], jsonResponse['filters']['last_date'])
   # print(sub_header)
   # else:
   #   response = { 'response': 'El header de la tabla es requerido'}
