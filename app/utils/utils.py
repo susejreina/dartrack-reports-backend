@@ -3,7 +3,7 @@
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import colors, Border, Color, Side, PatternFill, Font, GradientFill, Alignment, NamedStyle
-from datetime import datetime
+from datetime import datetime, time, date
 
 def create_workbook(title):
   wb = Workbook()
@@ -95,10 +95,50 @@ def resize_cells(ws, size):
     ws.column_dimensions[col].width = value
   return ws
 
+def week_header(ws, cant, row, week_start, week_end):
+
+  fil = row - 1
+  ini_cant = cant + 1
+  new_cant = cant + 13
+
+  roweek = NamedStyle(name="roweek")
+  roweek.font = Font(color='FFFFFF', size=12, bold=True)
+  roweek.fill = PatternFill("solid", fgColor="4F81BD")
+  roweek.alignment = Alignment(horizontal='center')
+
+  for i in range(week_start,week_end+1):
+    if i > 1:
+      ini_cant += 13
+      new_cant += 13
+
+    col_ini = get_column_letter(ini_cant)
+    col_fin = get_column_letter(new_cant)
+
+    ws.merge_cells(col_ini + str(fil) + ':' + col_fin + str(fil))
+
+    if i<week_end:
+      ws[col_ini + str(fil)] = 'SEMANA ' + str(i)
+      title = ws[col_ini + str(fil)]
+      ws[col_ini + str(fil)].style = roweek
+    else:
+      ws[col_ini + str(fil)] = 'TOTAL'
+      title = ws[col_ini + str(fil)]
+      ws[col_ini + str(fil)].style = roweek
+
+    # title = format_text(ws[col_ini + str(fil)], "center", "center")
+
+  return ws
+
 def load_rows(ws, data):
   for row in data:
     row_list = list(row)
     ws.append(row_list)
+  return ws
+
+def freeze_row(ws,num_col,num_fil):
+  num_fil += 2
+  ws.freeze_panes = ws[num_col + str(num_fil)]
+
   return ws
 
 def paint_par(ws, cell_header, data, num_col,row=11, col_money=[],col_porc=[]):
@@ -125,9 +165,9 @@ def load_filters(ws, init_vector):
   return ws
 
 def total_summary(ws, listTotal, numberRow, lonTableHeader, font_color="FFFFFF", fill_color="afbcd7",formatPercent=[],formatMoney=[],formatNumber=[]):
-  
+
   ws.append(listTotal)
-  
+
   totalOpe = NamedStyle(name="totalOpe")
   totalOpe.alignment = Alignment(horizontal='center')
   totalOpe.fill = PatternFill("solid", fgColor=fill_color)

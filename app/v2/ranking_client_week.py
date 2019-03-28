@@ -21,15 +21,21 @@ def ranking_client_week(charset='utf-8'):
   data,week_start,week_end = model_client_ranking_week.ranking_week(filters)
   wb, ws = utils.create_workbook("Vtas Cltes Rankin x Semana")
   ws,row = utils.header(ws, "Vtas Cltes rankin x Semana Detallada Filtros", 'CEDIS', 'LAGOS DE MORENO',filters)
+
   # print(jsonResponse.get('table', False))
   # table_exists = data.get('table', False)
   # headers_exists = data['table'].get('table', False)
   # if table_exists and headers_exists:
+
   table_header = jsonResponse['table']['headers']
   start = len(table_header) - 13
   sub_header = table_header[start:]
-  for week in range(week_start,week_end):
+  for week in range(week_start,week_end-1):
     table_header = table_header + sub_header
+  table_header = table_header + sub_header
+
+  ws = utils.week_header(ws, start, row, week_start, week_end)
+  # print(sub_header)
   # else:
   #   response = { 'response': 'El header de la tabla es requerido'}
   #   return jsonify(response)
@@ -38,6 +44,7 @@ def ranking_client_week(charset='utf-8'):
     ws.append(list(table_header))
     # Method for load rows
     ws = utils.load_rows(ws, data)
+    ws = utils.freeze_row(ws,'H',row)
 
     col_money = [10,11,12,13,14,15,16,17] # columnas que indican dinero
     col_porc = [9,20] # columnas que indican porcentaje
