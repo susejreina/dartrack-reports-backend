@@ -95,10 +95,53 @@ def resize_cells(ws, size):
     ws.column_dimensions[col].width = value
   return ws
 
+def week_header(ws, cant, row, init_date, last_date, table_header):
+
+  fil = row - 1
+  ini_cant = cant + 1
+  new_cant = cant + 13
+
+  cant = len(table_header) - cant
+  divi = cant / 13
+
+  '''date_object1 = datetime.strptime(init_date, '%dd/%mm/%Y')
+  date_object2 = datetime.strptime(last_date, '%dd/%mm/%Y')
+
+  diferencia = date_object2 - date_object1
+  print(diferencia)'''
+
+  roweek = NamedStyle(name="roweek")
+  roweek.font = Font(color='FFFFFF', size=12, bold=True)
+  roweek.fill = PatternFill("solid", fgColor="4F81BD")
+  roweek.alignment = Alignment(horizontal='center')
+
+  for i in range(1,divi+1):
+    if i > 1:
+      ini_cant += 13
+      new_cant += 13
+
+    col_ini = get_column_letter(ini_cant)
+    col_fin = get_column_letter(new_cant)
+
+    ws.merge_cells(col_ini + str(fil) + ':' + col_fin + str(fil))
+
+    ws[col_ini + str(fil)] = 'SEMANA'
+    title = ws[col_ini + str(fil)]
+    ws[col_ini + str(fil)].style = roweek
+    # title = format_text(ws[col_ini + str(fil)], "center", "center")
+
+  return ws
+
 def load_rows(ws, data):
   for row in data:
     row_list = list(row)
     ws.append(row_list)
+  return ws
+
+def freeze_row(ws,num_col,num_fil):
+  num_fil += 2
+  ws.freeze_panes = ws[num_col + str(num_fil)]
+
   return ws
 
 def paint_par(ws, cell_header, data, num_col,row=11, col_money=[],col_porc=[]):
@@ -125,9 +168,9 @@ def load_filters(ws, init_vector):
   return ws
 
 def total_summary(ws, listTotal, numberRow, lonTableHeader, font_color="FFFFFF", fill_color="afbcd7",formatPercent=[],formatMoney=[],formatNumber=[]):
-  
+
   ws.append(listTotal)
-  
+
   totalOpe = NamedStyle(name="totalOpe")
   totalOpe.alignment = Alignment(horizontal='center')
   totalOpe.fill = PatternFill("solid", fgColor=fill_color)
