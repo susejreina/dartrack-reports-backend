@@ -65,8 +65,9 @@ def ranking_client_week(charset='utf-8'):
       col_nro_int.append(col_nro)
       col_nro += 1
       col_porc.append(col_nro)
-    
+
     ws = utils.paint_par(ws, table_header, data, 7,row, col_money, col_porc,col_nro_dec,col_nro_int)
+    ws = utils.paint_columns(ws,table_header, data, 7,row)
     # Method for rezise cells
     # This method recives workbook active instance and
     ws = utils.resize_cells(ws, 20)
@@ -88,7 +89,7 @@ def ranking_client_week(charset='utf-8'):
     formatMoney = []
     formatNumberInteger = []
     formatNumberDecimal = []
-    
+
     for week in range(week_start,week_end+1):
       ini_cant += 1
       letter_col = get_column_letter(ini_cant)
@@ -122,7 +123,7 @@ def ranking_client_week(charset='utf-8'):
       letter_col = get_column_letter(ini_cant)
       listTotal.append('= (('+letter_s+str(total_total)+')/'+letter_r+str(total_total)+')')
       formatPercent.append(letter_col)
-    
+
     ws = utils.total_summary(ws, listTotal, total_total, len(table_header), "FFFFFF", "4F81BD", formatPercent,formatMoney,formatNumberInteger,formatNumberDecimal)
 
     nombre_archivo = datetime.now().date().strftime('%Y %m %d')+" 18Vtas Cltes rankin x Semana Detallada Filtros.xlsx"

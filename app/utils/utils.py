@@ -106,6 +106,16 @@ def week_header(ws, cant, row, week_start, week_end):
   roweek.fill = PatternFill("solid", fgColor="4F81BD")
   roweek.alignment = Alignment(horizontal='center')
 
+  roweek2 = NamedStyle(name="roweek2")
+  roweek2.font = Font(color='FFFFFF', size=12, bold=True)
+  roweek2.fill = PatternFill("solid", fgColor="76933C")
+  roweek2.alignment = Alignment(horizontal='center')
+
+  total_week = NamedStyle(name="total_week")
+  total_week.font = Font(color='FFFFFF', size=12, bold=True)
+  total_week.fill = PatternFill("solid", fgColor="6E6E6E")
+  total_week.alignment = Alignment(horizontal='center')
+
   for i in range(week_start,week_end+1):
     if i > 1:
       ini_cant += 13
@@ -119,11 +129,14 @@ def week_header(ws, cant, row, week_start, week_end):
     if i<week_end:
       ws[col_ini + str(fil)] = 'SEMANA ' + str(i)
       title = ws[col_ini + str(fil)]
-      ws[col_ini + str(fil)].style = roweek
+      if(i % 2 != 0):
+        ws[col_ini + str(fil)].style = roweek2
+      else:
+        ws[col_ini + str(fil)].style = roweek
     else:
       ws[col_ini + str(fil)] = 'TOTAL'
       title = ws[col_ini + str(fil)]
-      ws[col_ini + str(fil)].style = roweek
+      ws[col_ini + str(fil)].style = total_week
 
     # title = format_text(ws[col_ini + str(fil)], "center", "center")
 
@@ -162,6 +175,37 @@ def paint_par(ws, cell_header, data, num_col,row=11, col_money=[],col_porc=[],co
         ws[column_letter + str(rowD)].number_format = '#,##0.00 %'
   return ws
 
+def paint_columns(ws,table_header, data, num_col,row = 11):
+  rowPar2 = NamedStyle(name="rowPar2")
+  rowPar2.fill = PatternFill("solid", fgColor="E0F8F1")
+
+  ini_col = num_col + 1
+  fin_col = ini_col + 13
+
+  print(len(table_header))
+  print(len(table_header) - 13)
+  while fin_col < len(table_header):
+    for column in range(ini_col,fin_col):
+      column_letter = get_column_letter(column)
+      for rowD in range(row,len(data)+row+1):
+        if(rowD % 2 == 0):
+          ws[column_letter + str(rowD)].style = rowPar2
+
+    ini_col = fin_col + 13
+    fin_col = ini_col + 13
+
+  rowTotal = NamedStyle(name="rowTotal")
+  rowTotal.fill = PatternFill("solid", fgColor="E6E6E6")
+
+  ult_cols = len(table_header) - 13
+  for column in range(ult_cols+1,len(table_header)+1):
+    column_letter = get_column_letter(column)
+    for rowD in range(row,len(data)+row+1):
+      if(rowD % 2 == 0):
+        ws[column_letter + str(rowD)].style = rowTotal
+
+  return ws
+
 def load_filters(ws, init_vector):
   FullRange = init_vector +':' + get_column_letter(ws.max_column) \
   + str(ws.max_row)
@@ -187,7 +231,7 @@ def total_summary(ws, listTotal, numberRow, lonTableHeader, font_color="FFFFFF",
   for col_letter in formatNumberDecimal:
     ws[col_letter+str(numberRow)].number_format = '#,##0.00'
   for col_letter in formatNumberInteger:
-    ws[col_letter+str(numberRow)].number_format = '#0'    
+    ws[col_letter+str(numberRow)].number_format = '#0'
 
   return ws
 
