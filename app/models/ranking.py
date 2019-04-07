@@ -10,7 +10,7 @@ def build_clients_filters(filters):
 	canal_giro = filters.get('canal_giro', False)
 	canal_est = filters.get('canal_est', False)
 	filters = ""
-
+	
 	if (canal_giro):
 		if canal_giro["canal_giro_id"] != 0:
 			filters = filters + """
@@ -18,9 +18,12 @@ def build_clients_filters(filters):
 			"""
 	if (canal_est):
 		if canal_est["canal_est_id"] != 0:
-			filters = filters + """
-				WHERE C.channel_id ="""+str(canal_est["canal_est_id"])+"""
-			"""
+			if filters == "":
+				filters += " WHERE "
+			else:
+				filters += " AND "
+			filters += " C.channel_id ="+str(canal_est["canal_est_id"])
+
 	return filters
 
 def build_aditional_filters(filters):

@@ -18,9 +18,12 @@ def build_clients_filters(filters):
 			"""
 	if (canal_est):
 		if canal_est["canal_est_id"] != 0:
-			filters = filters + """
-				WHERE C.channel_id ="""+str(canal_est["canal_est_id"])+"""
-			"""
+			if filters == "":
+				filters += " WHERE "
+			else:
+				filters += " AND "
+			filters += " C.channel_id ="+str(canal_est["canal_est_id"])
+
 	return filters
 
 def build_ranking_filters(filters):

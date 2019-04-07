@@ -25,6 +25,7 @@ def header(ws, enc, h1, h2, filters):
   init_date  = filters.get('init_date', False)
   last_date  = filters.get('last_date', False)
   canal_est = filters.get('canal_est', False)
+  canal_giro = filters.get('canal_giro', False)
   presale_route  = filters.get('presale_route', False)
   delivery_route  = filters.get('delivery_route', False)
   product = filters.get('product', False)
@@ -70,6 +71,14 @@ def header(ws, enc, h1, h2, filters):
       title = ws['A'+str(nro)]
       title = format_text(ws['A'+str(nro)], "left", "center")
 
+  if canal_giro:
+    if canal_giro["canal_giro_id"] != 0:
+      nro += 1
+      ws['A'+str(nro)] = 'SEGMENTO'
+      ws['B'+str(nro)] = str(canal_giro["canal_giro"])
+      title = ws['A'+str(nro)]
+      title = format_text(ws['A'+str(nro)], "left", "center")  
+  
   if group_product:
     if group_product["group_product_id"] != 0:
       nro += 1
@@ -182,8 +191,6 @@ def paint_columns(ws,table_header, data, num_col,row = 11):
   ini_col = num_col + 1
   fin_col = ini_col + 13
 
-  print(len(table_header))
-  print(len(table_header) - 13)
   while fin_col < len(table_header):
     for column in range(ini_col,fin_col):
       column_letter = get_column_letter(column)
