@@ -257,3 +257,16 @@ def adds_title_format(ws, lonTableHeader, font_color="FFFFFF", fill_color="afbcd
 def format_date(_date, time):
   date_time = _date + " " + time
   return date_time
+
+def daysBetweenDates(dateStart, dateEnd):
+	arrDates = []
+	d = dateStart - timedelta(days=1)
+	while d<dateEnd:
+		d += timedelta(days=1)
+		arrDates.append(
+			{'day':d.strftime('%d'),
+			'month':d.strftime('%m'),
+			'year':d.strftime('%Y'),
+			'week':d.isocalendar()[1]}
+		)
+	return arrDates
