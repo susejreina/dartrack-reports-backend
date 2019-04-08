@@ -3,7 +3,7 @@
 
 from config import db
 from flask import Flask, send_file, request
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.utils import utils
 
 def build_clients_filters(filters):
@@ -100,6 +100,10 @@ def ranking_week(filters):
 	init_date  = filters.get('init_date', False)
 	last_date  = filters.get('last_date', False)
 
+	init_date1  = datetime.strptime(init_date,'%d/%m/%Y')
+	last_date1  = datetime.strptime(last_date,'%d/%m/%Y')
+	arrDates = utils.daysBetweenDates(init_date1, last_date1)
+
 	week_start = datetime.strptime(init_date,'%d/%m/%Y').isocalendar()[1]
 	week_end = int(datetime.strptime(last_date,'%d/%m/%Y').isocalendar()[1]) + 1
 
@@ -107,10 +111,10 @@ def ranking_week(filters):
 	ranking_filters = build_ranking_filters(filters)
 
 	cur = db.conn.cursor()
-	query_select = """SELECT clientes.id_g_suc, clientes.id_clte, 
-								CASE WHEN ranking_ordenes.rank IS NULL THEN 0 ELSE ranking_ordenes.rank END, 
+	query_select = """SELECT clientes.id_g_suc, clientes.id_clte,
+								CASE WHEN ranking_ordenes.rank IS NULL THEN 0 ELSE ranking_ordenes.rank END,
 								clientes.negocio, clientes.poblacion, clientes.canal_giro, clientes.canal_est, """
-	
+
 	query_weeks = ""
 	for week in range(week_start,week_end):
 		query_weeks += """
@@ -164,13 +168,13 @@ LEFT JOIN
 		ORDER BY O.client_id
 	) as ranking_ordenes
 	ON clientes.id_clte = ranking_ordenes.client"""
-	
+
 	joins_week = ""
 	for week in range(week_start,week_end):
 		dynamic_filters = build_orders_filters(filters,week)
-		joins_week += """ LEFT JOIN 
+		joins_week += """ LEFT JOIN
 			(
-			SELECT	o.client_id as client, SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION "htls", 
+			SELECT	o.client_id as client, SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION "htls",
 			(SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION /
 			(SELECT	SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION
 			FROM orders o
@@ -178,15 +182,15 @@ LEFT JOIN
 			LEFT JOIN products  p ON p.id = od.product_id
 			WHERE od.is_devolution = false AND o.active = true """+dynamic_filters+"""
 			)) as htls_percentage,
-			(SUM(od.total) + SUM(od.discount_promo) + SUM(od.discount_bonification))::DOUBLE PRECISION "total", 
+			(SUM(od.total) + SUM(od.discount_promo) + SUM(od.discount_bonification))::DOUBLE PRECISION "total",
 			SUM(od.discount_promo)::DOUBLE PRECISION "desc_promo",
 			SUM(od.discount_product)::DOUBLE PRECISION "desc_produc",
 			SUM(od.discount_bonification)::DOUBLE PRECISION "bonif",
 			SUM(od.discount_payment)::DOUBLE PRECISION "discount_payment",
-			(SUM(od.total))::DOUBLE PRECISION "venta_neta", 
+			(SUM(od.total))::DOUBLE PRECISION "venta_neta",
 			SUM(od.discount_fba)::DOUBLE PRECISION "bonif_fba",
 			(SUM(od.total) - SUM(od.discount_fba) - SUM(od.discount_payment))::DOUBLE PRECISION "venta_final",
-			SUM(od.quantity)::INTEGER "boxes_requested", 
+			SUM(od.quantity)::INTEGER "boxes_requested",
 			SUM(od.quantity_delivered)::INTEGER "boxes_delivered",
 			CASE
 				WHEN SUM(od.quantity_delivered)::INTEGER != 0
@@ -202,9 +206,9 @@ LEFT JOIN
 			) as ordenes_"""+str(week)+"""
 			ON clientes.id_clte = ordenes_"""+str(week)+""".client
 		"""
-	total_orders = """ LEFT JOIN 
+	total_orders = """ LEFT JOIN
 			(
-			SELECT	o.client_id as client, SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION "htls", 
+			SELECT	o.client_id as client, SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION "htls",
 			(SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION /
 			(SELECT	SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION
 			FROM orders o
@@ -212,15 +216,15 @@ LEFT JOIN
 			LEFT JOIN products  p ON p.id = od.product_id
 			WHERE od.is_devolution = false AND o.active = true """+ranking_filters+"""
 			)) as htls_percentage,
-			(SUM(od.total) + SUM(od.discount_promo) + SUM(od.discount_bonification))::DOUBLE PRECISION "total", 
+			(SUM(od.total) + SUM(od.discount_promo) + SUM(od.discount_bonification))::DOUBLE PRECISION "total",
 			SUM(od.discount_promo)::DOUBLE PRECISION "desc_promo",
 			SUM(od.discount_product)::DOUBLE PRECISION "desc_produc",
 			SUM(od.discount_bonification)::DOUBLE PRECISION "bonif",
 			SUM(od.discount_payment)::DOUBLE PRECISION "discount_payment",
-			(SUM(od.total))::DOUBLE PRECISION "venta_neta", 
+			(SUM(od.total))::DOUBLE PRECISION "venta_neta",
 			SUM(od.discount_fba)::DOUBLE PRECISION "bonif_fba",
-			(SUM(od.total) - SUM(od.discount_fba) - SUM(od.discount_payment))::DOUBLE PRECISION "venta_final", 
-			SUM(od.quantity)::INTEGER "boxes_requested", 
+			(SUM(od.total) - SUM(od.discount_fba) - SUM(od.discount_payment))::DOUBLE PRECISION "venta_final",
+			SUM(od.quantity)::INTEGER "boxes_requested",
 			SUM(od.quantity_delivered)::INTEGER "boxes_delivered",
 			CASE
 				WHEN SUM(od.quantity_delivered)::INTEGER != 0
@@ -241,4 +245,5 @@ LEFT JOIN
 	query = query_select+query_weeks+from_select+joins_week+total_orders+others_commands
 	cur.execute(query)
 	data = cur.fetchall()
-	return [data,week_start,week_end]
+	# return [data,week_start,week_end]
+	return [data,arrDates]

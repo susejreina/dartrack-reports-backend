@@ -3,7 +3,7 @@
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import colors, Border, Color, Side, PatternFill, Font, GradientFill, Alignment, NamedStyle
-from datetime import datetime, time, date
+from datetime import datetime, time, date, timedelta
 
 def create_workbook(title):
   wb = Workbook()
@@ -77,8 +77,8 @@ def header(ws, enc, h1, h2, filters):
       ws['A'+str(nro)] = 'SEGMENTO'
       ws['B'+str(nro)] = str(canal_giro["canal_giro"])
       title = ws['A'+str(nro)]
-      title = format_text(ws['A'+str(nro)], "left", "center")  
-  
+      title = format_text(ws['A'+str(nro)], "left", "center")
+
   if group_product:
     if group_product["group_product_id"] != 0:
       nro += 1
@@ -104,7 +104,7 @@ def resize_cells(ws, size):
     ws.column_dimensions[col].width = value
   return ws
 
-def week_header(ws, cant, row, week_start, week_end):
+def week_header(ws, cant, row, defW):
 
   fil = row - 1
   ini_cant = cant + 1
@@ -125,8 +125,11 @@ def week_header(ws, cant, row, week_start, week_end):
   total_week.fill = PatternFill("solid", fgColor="6E6E6E")
   total_week.alignment = Alignment(horizontal='center')
 
-  for i in range(week_start,week_end+1):
-    if i > 1:
+  week_start = defW[0]
+  week_end = defW[len(defW)-1]
+  fin = week_end + 2
+  for i in range(week_start,fin):
+    if i > week_start:
       ini_cant += 13
       new_cant += 13
 
@@ -135,7 +138,7 @@ def week_header(ws, cant, row, week_start, week_end):
 
     ws.merge_cells(col_ini + str(fil) + ':' + col_fin + str(fil))
 
-    if i<week_end:
+    if i < week_end + 1:
       ws[col_ini + str(fil)] = 'SEMANA ' + str(i)
       title = ws[col_ini + str(fil)]
       if(i % 2 != 0):
