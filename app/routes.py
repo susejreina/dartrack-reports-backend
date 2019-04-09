@@ -739,7 +739,7 @@ def ventas_operaciones():
   title.alignment = Alignment(horizontal="left", vertical="center")
 
   ws['A4'] = 'Fecha'
-  ws['B4'] = 'Desde 8 oct 2018 al 05 de enero 2019'
+  ws['B4'] = 'Desde '+request.form['date_start']+' Al '+request.form['date_end']
   title = ws['A4']
   title.font = Font(size=12,bold=True)
   title.alignment = Alignment(horizontal="left", vertical="center")

@@ -103,147 +103,87 @@ def ranking_week(filters):
 
 	init_date  = datetime.strptime(init_date,'%d/%m/%Y')
 	last_date  = datetime.strptime(last_date,'%d/%m/%Y')
-	arrDates = daysBetweenDates(init_date, last_date)
+	arrDates = utils.daysBetweenDates(init_date, last_date)
 
-	data = [1,24,5656,567,6,8768,879,2]
 	'''
 	client_filters = build_clients_filters(filters)
 	ranking_filters = build_ranking_filters(filters)
-
+	'''
+	months = [{'month':arrDates[0]["monthString"],
+						'dateStart':str(arrDates[0]["year"])+"-"+str(arrDates[0]["month"])+"-"+str(arrDates[0]["day"]),
+						'dateEnd': '',
+						'dayStart':int(arrDates[0]["day"]),
+						'dayEnd':31,
+						'dias': '',
+						'key': str(arrDates[0]["month"])+"_"+str(arrDates[0]["year"])
+						}]
+	
 	cur = db.conn.cursor()
-	query_select = """SELECT clientes.id_g_suc, clientes.id_clte, 
-								CASE WHEN ranking_ordenes.rank IS NULL THEN 0 ELSE ranking_ordenes.rank END, 
-								clientes.negocio, clientes.poblacion, clientes.canal_giro, clientes.canal_est, """
-	
+	query_select = """SELECT productos.marca, productos.sku, productos.name,productos.pres_ccm, """
 	query_weeks = ""
-	for week in range(week_start,week_end):
-		query_weeks += """
-		CASE WHEN ordenes_"""+str(week)+""".htls IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".htls END,
-		CASE WHEN ordenes_"""+str(week)+""".htls_percentage IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".htls_percentage END,
-		CASE WHEN ordenes_"""+str(week)+""".total IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".total END,
-		CASE WHEN ordenes_"""+str(week)+""".desc_promo IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".desc_promo END,
-		CASE WHEN ordenes_"""+str(week)+""".desc_produc IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".desc_produc END,
-		CASE WHEN ordenes_"""+str(week)+""".bonif IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".bonif END,
-		CASE WHEN ordenes_"""+str(week)+""".discount_payment IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".discount_payment END,
-		CASE WHEN ordenes_"""+str(week)+""".venta_neta IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".venta_neta END,
-		CASE WHEN ordenes_"""+str(week)+""".bonif_fba IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".bonif_fba END,
-		CASE WHEN ordenes_"""+str(week)+""".venta_final IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".venta_final END,
-		CASE WHEN ordenes_"""+str(week)+""".boxes_requested IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".boxes_requested END,
-		CASE WHEN ordenes_"""+str(week)+""".boxes_delivered IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".boxes_delivered END,
-		CASE WHEN ordenes_"""+str(week)+""".ent_ped IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".ent_ped END,"""
+	m = 0
+	dias = ""
+	for i in range(0,len(arrDates)):
+		d = arrDates[i] 
+		if months[m]["month"]!=d["monthString"]:
+			months[m]['dateEnd']=str(arrDates[i-1]["year"])+"-"+str(arrDates[i-1]["month"])+"-"+str(arrDates[i-1]["day"])
+			months[m]['dayEnd']=int(arrDates[i-1]["day"])
+			months[m]['dias'] = dias
+			months.append({'month':d["monthString"],
+										'dateStart':str(d["year"])+"-"+str(d["month"])+"-"+str(d["day"]),
+										'dateEnd': '',
+										'dayStart':int(d["day"]),
+										'dayEnd':31,
+										'dias': '',
+										'key': str(d["month"])+"_"+str(d["year"])
+									})
+			dias = ""
+			m += 1
+		dias += "Dia"+str(d["day"])+" NUMERIC(10,6),"
+		query_weeks += "CASE WHEN "+str(d["monthString"])+".Dia"+str(d["day"])+" IS NULL THEN 0 ELSE "+str(d["monthString"])+".Dia"+str(d["day"])+" END, "
 
-	query_weeks += """
-		CASE WHEN ordenes.htls IS NULL THEN 0 ELSE ordenes.htls END,
-		CASE WHEN ordenes.htls_percentage IS NULL THEN 0 ELSE ordenes.htls_percentage END,
-		CASE WHEN ordenes.total IS NULL THEN 0 ELSE ordenes.total END,
-		CASE WHEN ordenes.desc_promo IS NULL THEN 0 ELSE ordenes.desc_promo END,
-		CASE WHEN ordenes.desc_produc IS NULL THEN 0 ELSE ordenes.desc_produc END,
-		CASE WHEN ordenes.bonif IS NULL THEN 0 ELSE ordenes.bonif END,
-		CASE WHEN ordenes.discount_payment IS NULL THEN 0 ELSE ordenes.discount_payment END,
-		CASE WHEN ordenes.venta_neta IS NULL THEN 0 ELSE ordenes.venta_neta END,
-		CASE WHEN ordenes.bonif_fba IS NULL THEN 0 ELSE ordenes.bonif_fba END,
-		CASE WHEN ordenes.venta_final IS NULL THEN 0 ELSE ordenes.venta_final END,
-		CASE WHEN ordenes.boxes_requested IS NULL THEN 0 ELSE ordenes.boxes_requested END,
-		CASE WHEN ordenes.boxes_delivered IS NULL THEN 0 ELSE ordenes.boxes_delivered END,
-		CASE WHEN ordenes.ent_ped IS NULL THEN 0 ELSE ordenes.ent_ped END"""
+	months[m]['dateEnd']=str(arrDates[i]["year"])+"-"+str(arrDates[i]["month"])+"-"+str(arrDates[i]["day"])
+	months[m]['dayEnd']=int(arrDates[i]["day"])
+	months[m]['dias'] = dias
 
-	from_select = """
-						FROM (
-	SELECT  C.company_code as id_g_suc,C.id as id_clte, C.business_name as negocio, AD.location as poblacion, Cl.name as canal_giro,
-			CH.name as canal_est
-	FROM clients C
-	LEFT JOIN addresses AD ON AD.id = C.address_id
-	LEFT JOIN channels CH ON C.channel_id = CH.id
-	LEFT JOIN client_types CL ON C.client_type_id=Cl.id """+client_filters+"""
-	ORDER BY C.id
-) as clientes
-LEFT JOIN
-(
-	SELECT	o.client_id as client, rank() over (order by SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION DESC) as rank
-		FROM orders o
-		LEFT JOIN order_details  od ON o.id = od.order_id
-		LEFT JOIN products  p ON p.id = od.product_id
-		WHERE od.is_devolution = false AND o.active = true """+ranking_filters+"""
-		GROUP BY O.client_id
-		ORDER BY O.client_id
-	) as ranking_ordenes
-	ON clientes.id_clte = ranking_ordenes.client"""
+	query_weeks += "productos.total_htls "
+	query = query_select+query_weeks
+
+	query_from_productos = """ FROM (
+		SELECT P.id, B.name as marca, P.sku, P.name,P.pres_ccm, SUM((P.hlts * OD.quantity_delivered))::DOUBLE PRECISION total_htls
+		FROM orders O
+		LEFT JOIN order_details  OD ON O.id = OD.order_id
+		LEFT JOIN products P ON P.id = OD.product_id
+		LEFT JOIN brands B ON B.id=P.brand_id
+		WHERE od.is_devolution = false AND o.active = true  AND o.ordered_at BETWEEN '2018-12-01 00:00:00' AND '2019-01-31 23:59:59'
+		GROUP BY B.name, P.id,P.sku, P.name,P.pres_ccm
+		ORDER BY B.name) as productos"""
 	
-	joins_week = ""
-	for week in range(week_start,week_end):
-		dynamic_filters = build_orders_filters(filters,week)
-		joins_week += """ LEFT JOIN 
-			(
-			SELECT	o.client_id as client, SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION "htls", 
-			(SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION /
-			(SELECT	SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION
-			FROM orders o
-			LEFT JOIN order_details od ON o.id = od.order_id
-			LEFT JOIN products  p ON p.id = od.product_id
-			WHERE od.is_devolution = false AND o.active = true """+dynamic_filters+"""
-			)) as htls_percentage,
-			(SUM(od.total) + SUM(od.discount_promo) + SUM(od.discount_bonification))::DOUBLE PRECISION "total", 
-			SUM(od.discount_promo)::DOUBLE PRECISION "desc_promo",
-			SUM(od.discount_product)::DOUBLE PRECISION "desc_produc",
-			SUM(od.discount_bonification)::DOUBLE PRECISION "bonif",
-			SUM(od.discount_payment)::DOUBLE PRECISION "discount_payment",
-			(SUM(od.total))::DOUBLE PRECISION "venta_neta", 
-			SUM(od.discount_fba)::DOUBLE PRECISION "bonif_fba",
-			(SUM(od.total) - SUM(od.discount_fba) - SUM(od.discount_payment))::DOUBLE PRECISION "venta_final",
-			SUM(od.quantity)::INTEGER "boxes_requested", 
-			SUM(od.quantity_delivered)::INTEGER "boxes_delivered",
-			CASE
-				WHEN SUM(od.quantity_delivered)::INTEGER != 0
-				THEN ((SUM(od.quantity_delivered) ::DOUBLE PRECISION)/SUM(od.quantity ::DOUBLE PRECISION))
-				ELSE 0
-			END as "ent_ped"
-			FROM orders o
-			LEFT JOIN order_details  od ON o.id = od.order_id
-			LEFT JOIN products  p ON p.id = od.product_id
-			WHERE od.is_devolution = false AND o.active = true  """+dynamic_filters+"""
-			GROUP BY O.client_id
-			ORDER BY O.client_id
-			) as ordenes_"""+str(week)+"""
-			ON clientes.id_clte = ordenes_"""+str(week)+""".client
-		"""
-	total_orders = """ LEFT JOIN 
-			(
-			SELECT	o.client_id as client, SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION "htls", 
-			(SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION /
-			(SELECT	SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION
-			FROM orders o
-			LEFT JOIN order_details od ON o.id = od.order_id
-			LEFT JOIN products  p ON p.id = od.product_id
-			WHERE od.is_devolution = false AND o.active = true """+ranking_filters+"""
-			)) as htls_percentage,
-			(SUM(od.total) + SUM(od.discount_promo) + SUM(od.discount_bonification))::DOUBLE PRECISION "total", 
-			SUM(od.discount_promo)::DOUBLE PRECISION "desc_promo",
-			SUM(od.discount_product)::DOUBLE PRECISION "desc_produc",
-			SUM(od.discount_bonification)::DOUBLE PRECISION "bonif",
-			SUM(od.discount_payment)::DOUBLE PRECISION "discount_payment",
-			(SUM(od.total))::DOUBLE PRECISION "venta_neta", 
-			SUM(od.discount_fba)::DOUBLE PRECISION "bonif_fba",
-			(SUM(od.total) - SUM(od.discount_fba) - SUM(od.discount_payment))::DOUBLE PRECISION "venta_final", 
-			SUM(od.quantity)::INTEGER "boxes_requested", 
-			SUM(od.quantity_delivered)::INTEGER "boxes_delivered",
-			CASE
-				WHEN SUM(od.quantity_delivered)::INTEGER != 0
-				THEN ((SUM(od.quantity_delivered) ::DOUBLE PRECISION)/SUM(od.quantity ::DOUBLE PRECISION))
-				ELSE 0
-			END as "ent_ped"
-			FROM orders o
-			LEFT JOIN order_details  od ON o.id = od.order_id
-			LEFT JOIN products  p ON p.id = od.product_id
-			WHERE od.is_devolution = false AND o.active = true  """+ranking_filters+"""
-			GROUP BY O.client_id
-			ORDER BY O.client_id
-			) as ordenes
-			ON clientes.id_clte = ordenes.client
-		"""
+	query_from_days = ""
 
-	others_commands = """ ORDER BY clientes.id_clte;"""
-	query = query_select+query_weeks+from_select+joins_week+total_orders+others_commands
+	for d in months:
+		query_from_days += """ LEFT JOIN 
+			(SELECT *
+			FROM crosstab(
+			'SELECT P.id as key_"""+d["key"]+""", 
+			EXTRACT(DAY FROM  o.ordered_at) as day,  SUM((P.hlts * OD.quantity_delivered))::DOUBLE PRECISION total_htls
+			FROM orders O
+			LEFT JOIN order_details  OD ON O.id = OD.order_id
+			LEFT JOIN products P ON P.id = OD.product_id
+			WHERE od.is_devolution = false AND o.active = true AND 
+			o.ordered_at BETWEEN ''"""+d["dateStart"]+""" 00:00:00'' AND ''"""+d["dateEnd"]+""" 23:59:59''
+			GROUP BY key_"""+d["key"]+""",day
+			ORDER BY 1,2',
+			'SELECT day FROM generate_series("""+str(d["dayStart"])+""","""+str(d["dayEnd"])+""") AS day'
+			) AS (
+			key_"""+d["key"]+""" integer,
+			"""+d["dias"][:-1]+"""
+			)) as """+d["month"]+"""
+			ON productos.id = """+d["month"]+""".key_"""+d["key"]+"""
+		"""
+	
+	query = query_select+query_weeks+query_from_productos+query_from_days
 	cur.execute(query)
 	data = cur.fetchall()
-	'''
+
 	return [data,arrDates]
