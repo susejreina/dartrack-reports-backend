@@ -132,7 +132,7 @@ def resize_cells(ws, size):
 		ws.column_dimensions[col].width = value
 	return ws
 
-def week_header(ws, cant, row, week_start, week_end):
+def week_header(ws, cant, row, defW):
 
 	fil = row - 1
 	ini_cant = cant + 1
@@ -204,8 +204,56 @@ def month_header_array(ws, start, row, arrMonths):
 
 	return ws
 
-def week_header_array(ws, start, row, arrWeeks):
+def week_header(ws, cant, row, defW):
 
+	fil = row - 1
+	ini_cant = cant + 1
+	new_cant = cant + 13
+
+	roweek = NamedStyle(name="roweek")
+	roweek.font = Font(color='FFFFFF', size=12, bold=True)
+	roweek.fill = PatternFill("solid", fgColor="4F81BD")
+	roweek.alignment = Alignment(horizontal='center')
+
+	roweek2 = NamedStyle(name="roweek2")
+	roweek2.font = Font(color='FFFFFF', size=12, bold=True)
+	roweek2.fill = PatternFill("solid", fgColor="76933C")
+	roweek2.alignment = Alignment(horizontal='center')
+
+	total_week = NamedStyle(name="total_week")
+	total_week.font = Font(color='FFFFFF', size=12, bold=True)
+	total_week.fill = PatternFill("solid", fgColor="6E6E6E")
+	total_week.alignment = Alignment(horizontal='center')
+
+	week_start = defW[0]
+	week_end = defW[len(defW)-1]
+	fin = week_end + 2
+	for i in range(week_start,fin):
+		if i > week_start:
+			ini_cant += 13
+			new_cant += 13
+
+		col_ini = get_column_letter(ini_cant)
+		col_fin = get_column_letter(new_cant)
+
+		ws.merge_cells(col_ini + str(fil) + ':' + col_fin + str(fil))
+
+		if i < week_end + 1:
+			ws[col_ini + str(fil)] = 'SEMANA ' + str(i)
+			title = ws[col_ini + str(fil)]
+			if(i % 2 != 0):
+				ws[col_ini + str(fil)].style = roweek2
+			else:
+				ws[col_ini + str(fil)].style = roweek
+		else:
+			ws[col_ini + str(fil)] = 'TOTAL'
+			title = ws[col_ini + str(fil)]
+			ws[col_ini + str(fil)].style = total_week
+
+		# title = format_text(ws[col_ini + str(fil)], "center", "center")
+	return ws
+
+def week_header_array(ws, start, row, arrWeeks):
 	for i in range(0,len(arrWeeks)):
 		if i == 0:
 			start +=1
@@ -224,7 +272,6 @@ def week_header_array(ws, start, row, arrWeeks):
 			ws[col_ini + str(row)].style = roweek2
 		else:
 			ws[col_ini + str(row)].style = roweek
-
 		title = format_text(ws[col_ini + str(row)], "center", "center")
 
 	return ws

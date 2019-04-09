@@ -18,7 +18,8 @@ from app.utils import utils
 def ranking_client_week(charset='utf-8'):
   jsonResponse = json.loads(request.data)
   filters = jsonResponse.get('filters', False)
-  data,week_start,week_end = model_client_ranking_week.ranking_week(filters)
+  # data,week_start,week_end = model_client_ranking_week.ranking_week(filters)
+  data, arrDates = model_client_ranking_week.ranking_week(filters)
   wb, ws = utils.create_workbook("Vtas Cltes Rankin x Semana")
   ws,row = utils.header(ws, "Vtas Cltes rankin x Semana Detallada Filtros", 'CEDIS', 'LAGOS DE MORENO',filters)
 
@@ -27,14 +28,24 @@ def ranking_client_week(charset='utf-8'):
   # headers_exists = data['table'].get('table', False)
   # if table_exists and headers_exists:
 
+  arrWeek = []
+  for day in arrDates:
+    arrWeek.append(day["week"])
+  arrWeek1 = set(arrWeek)
+  defW = list(arrWeek1)
+  # print(defW[len(defW)-1])
+
+  week_start = defW[0]
+  week_end = defW[len(defW)-1]
+
   table_header = jsonResponse['table']['headers']
   start = len(table_header) - 13
   sub_header = table_header[start:]
-  for week in range(week_start,week_end-1):
+  for week in range(week_start,week_end):
     table_header = table_header + sub_header
   table_header = table_header + sub_header
 
-  ws = utils.week_header(ws, start, row, week_start, week_end)
+  ws = utils.week_header(ws, start, row, defW)
   # print(sub_header)
   # else:
   #   response = { 'response': 'El header de la tabla es requerido'}
@@ -51,7 +62,7 @@ def ranking_client_week(charset='utf-8'):
     col_nro_int = []
     col_nro_dec = []
     col_nro = 7
-    for week in range(week_start,week_end+1):
+    for week in range(week_start, week_end+1):
       col_nro += 1
       col_nro_dec.append(col_nro)
       col_nro += 1
@@ -90,7 +101,7 @@ def ranking_client_week(charset='utf-8'):
     formatNumberInteger = []
     formatNumberDecimal = []
 
-    for week in range(week_start,week_end+1):
+    for week in range(week_start, week_end+2):
       ini_cant += 1
       letter_col = get_column_letter(ini_cant)
       listTotal.append('= SUM('+letter_col+str(total_start)+':'+letter_col+str(total_end)+')')
