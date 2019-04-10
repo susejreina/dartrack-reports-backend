@@ -53,7 +53,6 @@ def ranking_product_week(charset='utf-8'):
   arrMonths.append({'text':new_month,'cols':colsMonth})
   wb, ws = utils.create_workbook("Vtas Marca Producto")
   ws,row = utils.header(ws, "Vtas Marca Producto Acum mes sem dia Filtros", 'CEDIS', 'LAGOS DE MORENO',filters)
-  print(row)
   
   if len(dataBefore)>0:
     ws.append(list(table_header))
@@ -61,9 +60,9 @@ def ranking_product_week(charset='utf-8'):
     ws = utils.adds_title_format_new(ws, longHeader, "FFFFFF", "4F81BD",row)
 
     ws.insert_rows(row,3)
-    row=6
+    row+=1
     ws = utils.month_header_array(ws, start, row, arrMonths)
-    row=7
+    row+=1
     ws = utils.week_header_array(ws, start, row, arrWeeks)
     total = 0
 

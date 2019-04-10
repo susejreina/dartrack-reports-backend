@@ -6,33 +6,16 @@ from flask import Flask, send_file, request
 from datetime import date, timedelta, datetime
 from app.utils import utils
 
-def build_clients_filters(filters):
-	canal_giro = filters.get('canal_giro', False)
-	canal_est = filters.get('canal_est', False)
-	filters = ""
-
-	if (canal_giro):
-		if canal_giro["canal_giro_id"] != 0:
-			filters = filters + """
-				WHERE Cl.id ="""+str(canal_giro["canal_giro_id"])+"""
-			"""
-	if (canal_est):
-		if canal_est["canal_est_id"] != 0:
-			if filters == "":
-				filters += " WHERE "
-			else:
-				filters += " AND "
-			filters += " C.channel_id ="+str(canal_est["canal_est_id"])
-
-	return filters
-
-def build_ranking_filters(filters):
+def build_orders_filters(filters):
 	init_date  = filters.get('init_date', False)
 	last_date  = filters.get('last_date', False)
 	presale_route  = filters.get('presale_route', False)
 	delivery_route  = filters.get('delivery_route', False)
-	product = filters.get('product', False)
-	group_product = filters.get('group_product',False)
+	branch = filters.get('branch', False)
+	canal_giro = filters.get('canal_giro', False)
+	canal_est = filters.get('canal_est', False)
+	business_name = filters.get('business_name',False)
+	population = filters.get('population',False)
 
 	filters = ""
 	if (presale_route):
@@ -45,55 +28,44 @@ def build_ranking_filters(filters):
 			filters = filters + """
 				AND o.route_delivery_id ="""+str(delivery_route["delivery_route_id"])+"""
 			"""
-	if (product):
-		if product["product_id"] != 0:
+	if (branch):
+		if branch["branch_id"] != 0:
 			filters = filters + """
-				AND p.id ="""+str(product["product_id"])+"""
+				AND B.id ="""+str(branch["branch_id"])+"""
 			"""
-	if (group_product):
-		if group_product["group_product_id"] != 0:
-			filters = filters + """
-				AND p.product_group_id ="""+str(group_product["group_product_id"])+"""
-			"""
+
 	if (init_date and last_date):
-		date_start = utils.format_date(init_date, '01:00')
-		date_end = utils.format_date(last_date, '23:59')
+		date_start = utils.format_date(init_date, '00:00:00')
+		date_end = utils.format_date(last_date, '23:59:59')
 		filters = filters + """
 			AND o.ordered_at BETWEEN ('"""+date_start+"""') AND ('"""+date_end+"""')
 			"""
-	return filters
 
-def build_orders_filters(filters,week):
-	presale_route  = filters.get('presale_route', False)
-	delivery_route  = filters.get('delivery_route', False)
-	product = filters.get('product', False)
-	group_product = filters.get('group_product',False)
+	if (canal_giro or canal_est or (business_name and business_name!="") or cities_name):
+		filters += """ AND o.client_id IN (SELECT C.id 
+								FROM clients as C 
+								LEFT JOIN addresses A ON C.address_id = A.id
+								LEFT JOIN cities CI ON A.city_id = CI.id
+								LEFT JOIN client_types CL ON C.client_type_id=Cl.id """
+		condicionales = ""
+		if (canal_giro):
+			if canal_giro["canal_giro_id"] != 0:
+				condicionales = " AND " if condicionales != "" else " WHERE "
+				filters += condicionales + " Cl.id ="+str(canal_giro["canal_giro_id"])
+		if (canal_est):
+			if canal_est["canal_est_id"] != 0:
+				condicionales = " AND " if condicionales != "" else " WHERE "
+				filters += condicionales + " C.channel_id ="+str(canal_est["canal_est_id"])
+		if (business_name):
+			if(business_name!=""):
+				condicionales = " AND " if condicionales != "" else " WHERE "
+				filters += condicionales + "  C.business_name LIKE '%"+business_name+"%'"
+		if (population):
+			if population["population_id"] != 0:
+				condicionales = " AND " if condicionales != "" else " WHERE "
+				filters += condicionales + " Cl.id ="+str(population["population_id"])
+		filters += ") "
 
-	filters = ""
-	if (presale_route):
-		if presale_route["presale_route_id"] != 0:
-			filters = filters + """
-				AND o.route_id ="""+str(presale_route["presale_route_id"])+"""
-			"""
-	if (delivery_route):
-		if delivery_route["delivery_route_id"] != 0:
-			filters = filters + """
-				AND o.route_delivery_id ="""+str(delivery_route["delivery_route_id"])+"""
-			"""
-	if (product):
-		if product["product_id"] != 0:
-			filters = filters + """
-				AND p.id ="""+str(product["product_id"])+"""
-			"""
-	if (group_product):
-		if group_product["group_product_id"] != 0:
-			filters = filters + """
-				AND p.product_group_id ="""+str(group_product["group_product_id"])+"""
-			"""
-	if week>0:
-		filters = filters + """
-			AND EXTRACT(WEEK FROM o.ordered_at) = """+str(week)+"""
-			"""
 	return filters
 
 def ranking_week(filters):
@@ -105,10 +77,8 @@ def ranking_week(filters):
 	last_date  = datetime.strptime(last_date,'%d/%m/%Y')
 	arrDates = utils.daysBetweenDates(init_date, last_date)
 
-	'''
-	client_filters = build_clients_filters(filters)
-	ranking_filters = build_ranking_filters(filters)
-	'''
+	order_filters = build_orders_filters(filters)
+
 	months = [{'month':arrDates[0]["monthString"],
 						'dateStart':str(arrDates[0]["year"])+"-"+str(arrDates[0]["month"])+"-"+str(arrDates[0]["day"]),
 						'dateEnd': '',
@@ -155,7 +125,7 @@ def ranking_week(filters):
 		LEFT JOIN order_details  OD ON O.id = OD.order_id
 		LEFT JOIN products P ON P.id = OD.product_id
 		LEFT JOIN brands B ON B.id=P.brand_id
-		WHERE od.is_devolution = false AND o.active = true  AND o.ordered_at BETWEEN '2018-12-01 00:00:00' AND '2019-01-31 23:59:59'
+		WHERE od.is_devolution = false AND o.active = true  """+order_filters+"""
 		GROUP BY B.name, P.id,P.sku, P.name,P.pres_ccm
 		ORDER BY B.name) as productos"""
 	

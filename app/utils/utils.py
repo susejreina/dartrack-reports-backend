@@ -57,6 +57,9 @@ def header(ws, enc, h1, h2, filters):
 	delivery_route  = filters.get('delivery_route', False)
 	product = filters.get('product', False)
 	group_product = filters.get('group_product',False)
+	branch = filters.get('branch', False)
+	population = filters.get('population',False)
+	business_name = filters.get('business_name',False)
 
 	nro = 3
 	if init_date and last_date:
@@ -111,6 +114,30 @@ def header(ws, enc, h1, h2, filters):
 			nro += 1
 			ws['A'+str(nro)] = 'GRUPO'
 			ws['B'+str(nro)] = str(group_product["group_product"])
+			title = ws['A'+str(nro)]
+			title = format_text(ws['A'+str(nro)], "left", "center")
+	
+	if branch:
+		if branch["branch_id"] != 0:
+			nro +=1
+			ws['A'+str(nro)] = 'MARCA'
+			ws['B'+str(nro)] = str(branch["branch"])
+			title = ws['A'+str(nro)]
+			title = format_text(ws['A'+str(nro)], "left", "center")
+
+	if population:
+		if population["population_id"] != 0:
+			nro +=1
+			ws['A'+str(nro)] = 'POBLACION'
+			ws['B'+str(nro)] = str(population["population"])
+			title = ws['A'+str(nro)]
+			title = format_text(ws['A'+str(nro)], "left", "center")
+
+	if business_name:
+		if business_name != "":
+			nro +=1
+			ws['A'+str(nro)] = 'NEGOCIO'
+			ws['B'+str(nro)] = str(business_name)
 			title = ws['A'+str(nro)]
 			title = format_text(ws['A'+str(nro)], "left", "center")
 
