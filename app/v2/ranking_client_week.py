@@ -77,8 +77,10 @@ def ranking_client_week(charset='utf-8'):
       col_nro += 1
       col_porc.append(col_nro)
 
-    ws = utils.paint_par(ws, table_header, data, 7,row, col_money, col_porc,col_nro_dec,col_nro_int)
-    ws = utils.paint_columns(ws,table_header, data, 7,row)
+    longData = len(data)
+    longHeader = len(table_header)
+    ws = utils.paint_par(ws, longHeader, longData, 7,row, col_money, col_porc,col_nro_dec,col_nro_int)
+    ws = utils.paint_columns(ws,longHeader, longData, 7,row)
     # Method for rezise cells
     # This method recives workbook active instance and
     ws = utils.resize_cells(ws, 20)
@@ -88,7 +90,7 @@ def ranking_client_week(charset='utf-8'):
     # ws = utils.load_filters(ws, 'A11')
     # Method for adds color to titles, first color si for the font
     # second color is for fill cell. Colors is in format RGB
-    ws = utils.adds_title_format(ws, len(table_header), "FFFFFF", "4F81BD",row)
+    ws = utils.adds_title_format(ws, longHeader, "FFFFFF", "4F81BD",row)
 
     total_start = row + 2
     total_end = (len(data) + total_start) -1

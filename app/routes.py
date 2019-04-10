@@ -55,7 +55,7 @@ def ventas_cliente():
             ORDER BY O.client_id;"""
   cur.execute(query)
   data = cur.fetchall()
-  query = """SELECT	o.client_id, EXTRACT(MONTH FROM o.ordered_at) as month, EXTRACT(YEAR FROM o.ordered_at) as year, SUM(od.quantity_delivered)::INTEGER "boxes", SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION "htls"
+  query = """SELECT	o.client_id, EXTRACT(MONTH FROM o.ordered_at) as month, EXTRACT(YEAR FROM o.ordered_at) as year, SUM(od.quantity_delivered)::INTEGER "boxes", SUM(od.hlts)::DOUBLE PRECISION "htls"
             FROM order_details od
             INNER JOIN orders  o ON o.id = od.order_id
             INNER JOIN products  p ON p.id = od.product_id
@@ -63,13 +63,12 @@ def ventas_cliente():
             BETWEEN ('"""+date_start+"""') AND ('"""+date_end+"""')
             GROUP BY O.client_id, EXTRACT(MONTH FROM O.ordered_at), EXTRACT(YEAR FROM O.ordered_at)
             ORDER BY O.client_id, EXTRACT(YEAR FROM O.ordered_at), EXTRACT(MONTH FROM O.ordered_at);"""
-  print(query)
   cur.execute(query)
   data_sum = cur.fetchall()
 
   wb = Workbook()
   ws = wb.active
-  ws.title = "VTAS X CTE-13.1"
+  ws.title = "Clte Acum Ano"
 
   yearStart = int(date_start[0:4])
   monthStart = int(date_start[5:7])
@@ -93,7 +92,7 @@ def ventas_cliente():
   ]
   qtyMonths = len(months)
 
-  ws['A1'] = 'VTAS x CLIENTE'
+  ws['A1'] = "80-DECSA Clte Acum año mes solo Cjs Htls"
 
   title = ws['A1']
   title.font = Font(size=12,bold=True)
@@ -268,7 +267,7 @@ def ventas_cliente():
     hlts.alignment = Alignment(horizontal='center')
     hlts.fill = PatternFill("solid", fgColor="DDDDDD")
 
-    nombre_archivo ="RC-13-1-"+datetime.now().date().strftime('%Y%m%d')+".xlsx"
+    nombre_archivo ="80-Cajas Hlts" + datetime.now().date().strftime('%d-%m-%Y') + ".xlsx"
     wb.save(nombre_archivo)
 
     return send_file('../'+nombre_archivo, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', True, nombre_archivo)
@@ -305,7 +304,7 @@ def ventas_marca():
           ORDER BY O.client_id, P.code;"""
   cur.execute(query)
   data = cur.fetchall()
-  query1 = """SELECT O.client_id, P.code, CAST (EXTRACT(YEAR FROM O.ordered_at) AS INTEGER), CAST (EXTRACT(MONTH FROM O.ordered_at) AS INTEGER), SUM(OD.quantity_delivered * p.hlts) as hlts
+  query1 = """SELECT O.client_id, P.code, CAST (EXTRACT(YEAR FROM O.ordered_at) AS INTEGER), CAST (EXTRACT(MONTH FROM O.ordered_at) AS INTEGER), SUM(OD.hlts) as hlts
           FROM order_details OD 
           LEFT JOIN orders O ON OD.order_id = O.id
           LEFT JOIN products P ON OD.product_id=P.id
@@ -317,7 +316,7 @@ def ventas_marca():
 
   wb = Workbook()
   ws = wb.active
-  ws.title = "VTAS X MARCA 13.2"
+  ws.title = "Clte Acum Ano"
 
   yearStart = int(date_start[0:4])
   monthStart = int(date_start[5:7])
@@ -341,7 +340,7 @@ def ventas_marca():
   ]
   qtyMonths = len(months)
 
-  ws['A1'] = 'VENTAS POR MARCA POR CLIENTE'
+  ws['A1'] = '81-DECSA Vtas Clte Acum Año Mes Producto Cajas Htls'
   title = ws['A1']
   title.font = Font(size=12,bold=True)
   title.alignment = Alignment(horizontal="center", vertical="center")
@@ -473,7 +472,7 @@ def ventas_marca():
     hlts.fill = PatternFill("solid", fgColor="305496")
     
 
-    nombre_archivo ="RC-13-2-"+datetime.now().date().strftime('%Y%m%d')+".xlsx"
+    nombre_archivo = "81-DECSA Vtas Clte Acum Año Mes Producto Cajas Htls-" + datetime.now().date().strftime('%d-%m-%Y') + ".xlsx"
     wb.save(nombre_archivo)
 
     return send_file('../'+nombre_archivo, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', True, nombre_archivo)
@@ -493,7 +492,7 @@ def ventas_cobertura():
   wb = Workbook()
   #Definimos como nuestra hoja de trabajo, la hoja activa, por defecto la primera del libro
   ws = wb.active
-  ws.title = "COBERTURA 13.3"
+  ws.title = "Cobertura Equipos"
 
   #month = datetime.now().date().strftime('%m')
   #year = datetime.now().date().strftime('%Y')
@@ -531,7 +530,7 @@ def ventas_cobertura():
   qtyMonths = len(months)
 
   ws.merge_cells('A1:N1')
-  ws['A1'] = 'COBERTURA'
+  ws['A1'] = '82-DECSA Vtas Clte Cobertura Equipos Promos Fecha Alta'
   title = ws['A1']
   title.font = Font(size=12,bold=True)
   title.alignment = Alignment(horizontal="center", vertical="center")
@@ -552,9 +551,14 @@ def ventas_cobertura():
 
   query = """SELECT O.client_id as id_client, C.company_code as id_erp, C.client_number_ant as cliente_ceveceria, C.client_high as mayorista,
             	C.business_name as negocio, CI.name as poblacion, CD.channel_type_name as canal, CT.name as segmento, R.name as route,
-            	U.name || ' ' || U.lastname as name, CD.margin_level, C.discount as bonificacion, C.client_status, ' ' as enfriador,
-                ' ' as rice_entregado, ' ' as monto_rice, ' ' as fachada, ' ' as doc, ' ' as observ,
-                to_char(C.created_at,'YYYY/MM/DD') as creado, to_char(C.created_at, 'TMMonth')
+            	U.name || ' ' || U.lastname as name, CD.margin_level, C.discount as bonificacion, C.client_status, 
+              CASE WHEN C.has_cooler = TRUE THEN 1 ELSE 0 END as enfriador,
+              CASE WHEN C.rice = TRUE THEN 1 ELSE 0 END  as rice_entregado, 
+              C.rice_amount as monto_rice, 
+              CASE WHEN C.has_facade = TRUE THEN 1 ELSE 0 END  as fachada, 
+              CASE WHEN C.is_completed = TRUE THEN 1 ELSE 0 END  as doc, 
+              C.comments as observ,
+              to_char(C.created_at,'YYYY/MM/DD') as creado, to_char(C.created_at, 'TMMonth')
             FROM orders O
             LEFT JOIN clients C ON O.client_id = C.id
             LEFT JOIN addresses A ON C.address_id = A.id
@@ -660,7 +664,7 @@ def ventas_cobertura():
         for rowD in range(5,len(data)+6):
          if(rowD % 2 == 0):
             ws[column_letter + str(rowD)].style = rowPar
-         if(column > 11):
+         if(column==12 or column==16 or column > 21):
             ws[column_letter + str(rowD)].number_format = '#,#0.0'
 
       #cambiar ancho de columns
@@ -694,7 +698,7 @@ def ventas_cobertura():
         for cell in row:
          cell.style = headOpe
 
-      nombre_archivo ="RC-13-3-"+datetime.now().date().strftime('%Y%m%d')+".xlsx"
+      nombre_archivo = "82-DECSA Vtas Clte Cobertura Equipos Promos Fecha Alta-" + datetime.now().date().strftime('%d-%m-%Y') + ".xlsx"
       wb.save(nombre_archivo)
 
       return send_file('../'+nombre_archivo, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', True, nombre_archivo)
@@ -714,7 +718,7 @@ def ventas_operaciones():
   wb = Workbook()
   #Definimos como nuestra hoja de trabajo, la hoja activa, por defecto la primera del libro
   ws = wb.active
-  ws.title = "OPERACIONES 13.4"
+  ws.title = "Vtas Acum Ruta"
 
   date_start = request.form['date_start']+' 00:00:00'
   date_end = request.form['date_end']+' 23:59:59'
@@ -726,7 +730,7 @@ def ventas_operaciones():
   rowPar = NamedStyle(name="rowPar")
   rowPar.fill = PatternFill("solid", fgColor="E0ECF8")
 
-  ws['A1'] = 'OPERACIONES'
+  ws['A1'] = '83-DECSA Vtas Acum Ruta Año Sem Poblacion Cjs Hlts'
   title = ws['A1']
   title.font = Font(size=14,bold=True)
   title.alignment = Alignment(horizontal="center", vertical="center")
@@ -818,7 +822,7 @@ def ventas_operaciones():
         for cell in row:
          cell.style = headOpe
 
-      nombre_archivo ="RC-13-4-"+datetime.now().date().strftime('%Y%m%d')+".xlsx"
+      nombre_archivo = "83-DECSA Vtas Acum Ruta Año Sem Poblacion Cjs Hlts-" + datetime.now().date().strftime('%d-%m-%Y') + ".xlsx"
       wb.save(nombre_archivo)
 
       return send_file('../'+nombre_archivo, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', True, nombre_archivo)
@@ -839,7 +843,7 @@ def trade_mkt():
   wb = Workbook()
   #Definimos como nuestra hoja de trabajo, la hoja activa, por defecto la primera del libro
   ws = wb.active
-  ws.title = "TRADE MKT"
+  ws.title = "MKT Acum Clte"
 
   date_start = request.form['date_start']+' 00:00:00'
   date_end = request.form['date_end']+' 23:59:59'
@@ -851,7 +855,7 @@ def trade_mkt():
   rowPar = NamedStyle(name="rowPar")
   rowPar.fill = PatternFill("solid", fgColor="E0ECF8")
 
-  ws['A1'] = 'TRADE MKT'
+  ws['A1'] = '84-DECSA MKT Acum Clte Canal Promo Iniciativas'
   title = ws['A1']
   title.font = Font(size=14,bold=True)
   title.alignment = Alignment(horizontal="center", vertical="center")
@@ -1033,7 +1037,7 @@ def trade_mkt():
       for cell in row:
         cell.style = headOpe
 
-    nombre_archivo ="TRADE_MKT_"+datetime.now().date().strftime('%Y%m%d')+".xlsx"
+    nombre_archivo = "84-DECSA MKT Acum Clte Canal Promo Iniciativas-" + datetime.now().date().strftime('%d-%m-%Y') + ".xlsx"
     wb.save(nombre_archivo)
 
     return send_file('../'+nombre_archivo, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', True, nombre_archivo)
