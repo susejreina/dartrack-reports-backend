@@ -159,50 +159,51 @@ def resize_cells(ws, size):
 		ws.column_dimensions[col].width = value
 	return ws
 
-def week_header(ws, cant, row, defW):
-
-	fil = row - 1
-	ini_cant = cant + 1
-	new_cant = cant + 13
-
-	roweek = NamedStyle(name="roweek")
-	roweek.font = Font(color='FFFFFF', size=12, bold=True)
-	roweek.fill = PatternFill("solid", fgColor="4F81BD")
-	roweek.alignment = Alignment(horizontal='center')
-
-	roweek2 = NamedStyle(name="roweek2")
-	roweek2.font = Font(color='FFFFFF', size=12, bold=True)
-	roweek2.fill = PatternFill("solid", fgColor="76933C")
-	roweek2.alignment = Alignment(horizontal='center')
-
-	total_week = NamedStyle(name="total_week")
-	total_week.font = Font(color='FFFFFF', size=12, bold=True)
-	total_week.fill = PatternFill("solid", fgColor="6E6E6E")
-	total_week.alignment = Alignment(horizontal='center')
-
-	for i in range(week_start,week_end+1):
-		if i > 1:
-			ini_cant += 13
-			new_cant += 13
-
-		col_ini = get_column_letter(ini_cant)
-		col_fin = get_column_letter(new_cant)
-
-		ws.merge_cells(col_ini + str(fil) + ':' + col_fin + str(fil))
-
-		if i<week_end:
-			ws[col_ini + str(fil)] = 'SEMANA ' + str(i)
-			title = ws[col_ini + str(fil)]
-			if(i % 2 != 0):
-				ws[col_ini + str(fil)].style = roweek2
-			else:
-				ws[col_ini + str(fil)].style = roweek
+def week_header(ws, start, row, arrWeeks, jumps):
+	for i in range(0,len(arrWeeks)):
+		if i == 0:
+			start +=1
 		else:
-			ws[col_ini + str(fil)] = 'TOTAL'
-			title = ws[col_ini + str(fil)]
-			ws[col_ini + str(fil)].style = total_week
+			start = end + 1
+		end = (start + jumps) - 1
 
-		# title = format_text(ws[col_ini + str(fil)], "center", "center")
+		col_ini = get_column_letter(start)
+		col_fin = get_column_letter(end)
+
+		ws.merge_cells(col_ini + str(row) + ':' + col_fin + str(row))
+
+		ws[col_ini + str(row)] = arrWeeks[i]["text"]
+		title = ws[col_ini + str(row)]
+		if(i % 2 != 0):
+			ws[col_ini + str(row)].style = roweek2
+		else:
+			ws[col_ini + str(row)].style = roweek
+		title = format_text(ws[col_ini + str(row)], "center", "center")
+
+	return ws
+
+def month_header(ws, start, row, arrMonths, jumps):
+
+	for i in range(0,len(arrMonths)):
+		if i == 0:
+			start +=1
+		else:
+			start = end + 1
+		end = (start + (13 * int(arrMonths[i]["weeks"]))) - 1
+
+		col_ini = get_column_letter(start)
+		col_fin = get_column_letter(end)
+
+		ws.merge_cells(col_ini + str(row) + ':' + col_fin + str(row))
+
+		ws[col_ini + str(row)] = arrMonths[i]["text"]
+		title = ws[col_ini + str(row)]
+		if(i % 2 != 0):
+			ws[col_ini + str(row)].style = monthOdd
+		else:
+			ws[col_ini + str(row)].style = monthPair
+
+		title = format_text(ws[col_ini + str(row)], "center", "center")
 
 	return ws
 
@@ -302,14 +303,14 @@ def paint_par(ws, longHeader, lenData, num_col,row=11, col_money=[],col_porc=[],
 				ws[column_letter + str(rowD)].number_format = '#,##0.00 %'
 	return ws
 
-def paint_columns(ws,table_header, lenData, num_col,row = 11):
+def paint_columns(ws,longHeader, lenData, num_col,row = 11):
 	rowPar2 = NamedStyle(name="rowPar2")
 	rowPar2.fill = PatternFill("solid", fgColor="E0F8F1")
 
 	ini_col = num_col + 1
 	fin_col = ini_col + 13
 
-	while fin_col < len(table_header):
+	while fin_col < longHeader:
 		for column in range(ini_col,fin_col):
 			column_letter = get_column_letter(column)
 			for rowD in range(row,lenData+row+1):
@@ -322,8 +323,8 @@ def paint_columns(ws,table_header, lenData, num_col,row = 11):
 	rowTotal = NamedStyle(name="rowTotal")
 	rowTotal.fill = PatternFill("solid", fgColor="E6E6E6")
 
-	ult_cols = len(table_header) - 13
-	for column in range(ult_cols+1,len(table_header)+1):
+	ult_cols = longHeader - 13
+	for column in range(ult_cols+1,longHeader+1):
 		column_letter = get_column_letter(column)
 		for rowD in range(row,lenData+row+1):
 			if(rowD % 2 == 0):

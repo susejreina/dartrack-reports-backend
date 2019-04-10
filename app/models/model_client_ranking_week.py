@@ -56,14 +56,14 @@ def build_ranking_filters(filters):
 				AND p.product_group_id ="""+str(group_product["group_product_id"])+"""
 			"""
 	if (init_date and last_date):
-		date_start = utils.format_date(init_date, '01:00')
-		date_end = utils.format_date(last_date, '23:59')
+		date_start = utils.format_date(init_date, '00:00:00')
+		date_end = utils.format_date(last_date, '23:59:59')
 		filters = filters + """
 			AND o.ordered_at BETWEEN ('"""+date_start+"""') AND ('"""+date_end+"""')
 			"""
 	return filters
 
-def build_orders_filters(filters,week):
+def build_orders_filters(filters,week,year):
 	presale_route  = filters.get('presale_route', False)
 	delivery_route  = filters.get('delivery_route', False)
 	product = filters.get('product', False)
@@ -93,6 +93,7 @@ def build_orders_filters(filters,week):
 	if week>0:
 		filters = filters + """
 			AND EXTRACT(WEEK FROM o.ordered_at) = """+str(week)+"""
+			AND EXTRACT(YEAR FROM o.ordered_at) = """+str(year)+"""
 			"""
 	return filters
 
@@ -104,8 +105,26 @@ def ranking_week(filters):
 	last_date1  = datetime.strptime(last_date,'%d/%m/%Y')
 	arrDates = utils.daysBetweenDates(init_date1, last_date1)
 
-	week_start = datetime.strptime(init_date,'%d/%m/%Y').isocalendar()[1]
-	week_end = int(datetime.strptime(last_date,'%d/%m/%Y').isocalendar()[1]) + 1
+	week = -1 if len(arrDates)<=0 else arrDates[0]["week"]
+	month = -1 if len(arrDates)<=0 else str(arrDates[0]["monthString"])+" "+str(arrDates[0]["year"])
+
+	arrWeeks = []
+	arrMonths = []
+	weeksPerMonth = 0
+	for day in arrDates:
+		year = day["year"]
+		new_month = str(day["monthString"])+" "+str(year)
+		if(day["week"]!=week):
+			arrWeeks.append({'text':"Semana "+str(week),'id':week,'year':year})
+			week = day["week"]
+			weeksPerMonth += 1
+		if(new_month!=month):
+			arrMonths.append({'text':month,'weeks':weeksPerMonth})
+			month=new_month
+			weeksPerMonth = 1
+
+	arrWeeks.append({'text':"Semana "+str(week),'id':week,'year':year})
+	arrMonths.append({'text':new_month,'weeks':weeksPerMonth})
 
 	client_filters = build_clients_filters(filters)
 	ranking_filters = build_ranking_filters(filters)
@@ -116,21 +135,22 @@ def ranking_week(filters):
 								clientes.negocio, clientes.poblacion, clientes.canal_giro, clientes.canal_est, """
 
 	query_weeks = ""
-	for week in range(week_start,week_end):
+	for week in range(0,len(arrWeeks)):
+		weekId = str(arrWeeks[week]["id"])+"_"+str(arrWeeks[week]["year"])
 		query_weeks += """
-		CASE WHEN ordenes_"""+str(week)+""".htls IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".htls END,
-		CASE WHEN ordenes_"""+str(week)+""".htls_percentage IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".htls_percentage END,
-		CASE WHEN ordenes_"""+str(week)+""".total IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".total END,
-		CASE WHEN ordenes_"""+str(week)+""".desc_promo IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".desc_promo END,
-		CASE WHEN ordenes_"""+str(week)+""".desc_produc IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".desc_produc END,
-		CASE WHEN ordenes_"""+str(week)+""".bonif IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".bonif END,
-		CASE WHEN ordenes_"""+str(week)+""".discount_payment IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".discount_payment END,
-		CASE WHEN ordenes_"""+str(week)+""".venta_neta IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".venta_neta END,
-		CASE WHEN ordenes_"""+str(week)+""".bonif_fba IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".bonif_fba END,
-		CASE WHEN ordenes_"""+str(week)+""".venta_final IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".venta_final END,
-		CASE WHEN ordenes_"""+str(week)+""".boxes_requested IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".boxes_requested END,
-		CASE WHEN ordenes_"""+str(week)+""".boxes_delivered IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".boxes_delivered END,
-		CASE WHEN ordenes_"""+str(week)+""".ent_ped IS NULL THEN 0 ELSE ordenes_"""+str(week)+""".ent_ped END,"""
+		CASE WHEN ordenes_"""+str(weekId)+""".htls IS NULL THEN 0 ELSE ordenes_"""+str(weekId)+""".htls END,
+		CASE WHEN ordenes_"""+str(weekId)+""".htls_percentage IS NULL THEN 0 ELSE ordenes_"""+str(weekId)+""".htls_percentage END,
+		CASE WHEN ordenes_"""+str(weekId)+""".total IS NULL THEN 0 ELSE ordenes_"""+str(weekId)+""".total END,
+		CASE WHEN ordenes_"""+str(weekId)+""".desc_promo IS NULL THEN 0 ELSE ordenes_"""+str(weekId)+""".desc_promo END,
+		CASE WHEN ordenes_"""+str(weekId)+""".desc_produc IS NULL THEN 0 ELSE ordenes_"""+str(weekId)+""".desc_produc END,
+		CASE WHEN ordenes_"""+str(weekId)+""".bonif IS NULL THEN 0 ELSE ordenes_"""+str(weekId)+""".bonif END,
+		CASE WHEN ordenes_"""+str(weekId)+""".discount_payment IS NULL THEN 0 ELSE ordenes_"""+str(weekId)+""".discount_payment END,
+		CASE WHEN ordenes_"""+str(weekId)+""".venta_neta IS NULL THEN 0 ELSE ordenes_"""+str(weekId)+""".venta_neta END,
+		CASE WHEN ordenes_"""+str(weekId)+""".bonif_fba IS NULL THEN 0 ELSE ordenes_"""+str(weekId)+""".bonif_fba END,
+		CASE WHEN ordenes_"""+str(weekId)+""".venta_final IS NULL THEN 0 ELSE ordenes_"""+str(weekId)+""".venta_final END,
+		CASE WHEN ordenes_"""+str(weekId)+""".boxes_requested IS NULL THEN 0 ELSE ordenes_"""+str(weekId)+""".boxes_requested END,
+		CASE WHEN ordenes_"""+str(weekId)+""".boxes_delivered IS NULL THEN 0 ELSE ordenes_"""+str(weekId)+""".boxes_delivered END,
+		CASE WHEN ordenes_"""+str(weekId)+""".ent_ped IS NULL THEN 0 ELSE ordenes_"""+str(weekId)+""".ent_ped END,"""
 
 	query_weeks += """
 		CASE WHEN ordenes.htls IS NULL THEN 0 ELSE ordenes.htls END,
@@ -170,8 +190,9 @@ LEFT JOIN
 	ON clientes.id_clte = ranking_ordenes.client"""
 
 	joins_week = ""
-	for week in range(week_start,week_end):
-		dynamic_filters = build_orders_filters(filters,week)
+	for week in range(0,len(arrWeeks)):
+		weekId = str(arrWeeks[week]["id"])+"_"+str(arrWeeks[week]["year"])
+		dynamic_filters = build_orders_filters(filters,arrWeeks[week]["id"],arrWeeks[week]["year"])
 		joins_week += """ LEFT JOIN
 			(
 			SELECT	o.client_id as client, SUM((p.hlts * od.quantity_delivered))::DOUBLE PRECISION "htls",
@@ -203,8 +224,8 @@ LEFT JOIN
 			WHERE od.is_devolution = false AND o.active = true  """+dynamic_filters+"""
 			GROUP BY O.client_id
 			ORDER BY O.client_id
-			) as ordenes_"""+str(week)+"""
-			ON clientes.id_clte = ordenes_"""+str(week)+""".client
+			) as ordenes_"""+str(weekId)+"""
+			ON clientes.id_clte = ordenes_"""+str(weekId)+""".client
 		"""
 	total_orders = """ LEFT JOIN
 			(
@@ -245,5 +266,5 @@ LEFT JOIN
 	query = query_select+query_weeks+from_select+joins_week+total_orders+others_commands
 	cur.execute(query)
 	data = cur.fetchall()
-	# return [data,week_start,week_end]
-	return [data,arrDates]
+	
+	return [data,arrDates,arrWeeks,arrMonths]
